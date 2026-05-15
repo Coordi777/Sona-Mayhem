@@ -37,17 +37,17 @@ jobs:
 
       - name: Prepare release package
         run: |
-          mkdir -p release/sona
+          mkdir -p release/sona-mayhem
           # 复制构建产物
-          cp dist/index.js release/sona/
-          cp dist/index.css release/sona/
+          cp dist/index.js release/sona-mayhem/
+          cp dist/index.css release/sona-mayhem/
           # 复制 assets（如果存在）
           if [ -d "dist/assets" ]; then
-            cp -r dist/assets release/sona/
+            cp -r dist/assets release/sona-mayhem/
           fi
           # 打包
           cd release
-          zip -r ../sona-${{ github.ref_name }}.zip sona/
+          zip -r ../sona-mayhem-${{ github.ref_name }}.zip sona-mayhem/
 
       - name: Generate release notes
         id: notes
@@ -74,8 +74,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Sona ${{ github.ref_name }}
+          name: Sona-Mayhem ${{ github.ref_name }}
           body: ${{ steps.notes.outputs.notes }}
-          files: sona-${{ github.ref_name }}.zip
+          files: sona-mayhem-${{ github.ref_name }}.zip
           draft: false
           prerelease: false
