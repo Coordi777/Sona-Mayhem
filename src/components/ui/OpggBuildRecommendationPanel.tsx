@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { SonaSelect } from '@/components/ui/SonaSelect'
-import tier1Icon from '@/../assets/tier/t1.svg'
-import tier2Icon from '@/../assets/tier/t2.svg'
-import tier3Icon from '@/../assets/tier/t3.svg'
-import tier4Icon from '@/../assets/tier/t4.svg'
-import tier5Icon from '@/../assets/tier/t5.svg'
+import tier1Icon from '@assets/tier/t1.svg'
+import tier2Icon from '@assets/tier/t2.svg'
+import tier3Icon from '@assets/tier/t3.svg'
+import tier4Icon from '@assets/tier/t4.svg'
+import tier5Icon from '@assets/tier/t5.svg'
 import {
   getAugmentInfo,
   getChampionById,

@@ -1,3 +1,5 @@
+import { logger } from '@/index'
+
 export interface AramggRequestOptions {
   signal?: AbortSignal
   timeoutMs?: number
@@ -525,21 +527,14 @@ export class AramggDataApi {
     const text = await this.requestText(`/zh-CN/champion-stats/${championId}`, options)
     const parsed = parseAramggChampionRecommendation(text, championId)
 
-    console.groupCollapsed(`[ARAMGG] champion ${championId} parsed recommendation`)
-    console.log('raw text length:', text.length)
-    console.log('raw text preview:', text.slice(0, 500))
-    console.log('summary:', {
-      hasChampionStats: parsed.championStats != null,
-      augmentCount: Object.keys(parsed.augments).length,
-      coreItemBuildCount: parsed.coreItemBuilds.length,
-      itemCount: Object.keys(parsed.items).length,
-    })
-    console.log('championStats:', parsed.championStats)
-    console.log('coreItemBuilds:', parsed.coreItemBuilds)
-    console.log('augments:', parsed.augments)
-    console.log('items:', parsed.items)
-    console.log('full parsed recommendation:', parsed)
-    console.groupEnd()
+    logger.debug(
+      '[ARAMGG] champion %d → augments=%d, coreItemBuilds=%d, items=%d, hasStats=%s',
+      championId,
+      Object.keys(parsed.augments).length,
+      parsed.coreItemBuilds.length,
+      Object.keys(parsed.items).length,
+      String(parsed.championStats != null),
+    )
 
     return parsed
   }

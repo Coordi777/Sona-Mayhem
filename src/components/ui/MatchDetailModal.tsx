@@ -3,8 +3,8 @@ import { Modal } from '@/components/ui/Modal'
 import { lcu } from '@/lib/lcu'
 import { getChampIcon, getItemIcon, getSpellIcon, getPerkIcon, getPerkStyleIcon, getQueueName, getMapName } from '@/lib/assets'
 import type { MatchDetail, Participant, ParticipantIdentity, MatchTeam } from '@/types/lcu'
-import blueTurretIcon from '@/../assets/game-statistic-icons/Blue_Turret_icon.png'
-import redTurretIcon from '@/../assets/game-statistic-icons/Red_Turret_icon.png'
+import blueTurretIcon from '@assets/game-statistic-icons/Blue_Turret_icon.png'
+import redTurretIcon from '@assets/game-statistic-icons/Red_Turret_icon.png'
 import '@/styles/MatchDetailModal.css'
 
 type RankInfo = {

@@ -173,11 +173,16 @@ function copyDirSync(src: string, dest: string) {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   define: {
     __PLUGIN_VERSION__: JSON.stringify(pkg.version),
     'process.env.NODE_ENV': JSON.stringify('production'),
   },
+  // 仅生产构建剥离裸 console / debugger（dev 模式保留以便调试）
+  // 注意：logger.ts 通过 console[method] 动态调用，esbuild 静态分析不会剥离它
+  esbuild: command === 'build'
+    ? { drop: ['console', 'debugger'] }
+    : {},
   plugins: [
     react(),
     mkcert(),
@@ -187,6 +192,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@assets': path.resolve(__dirname, 'assets'),
     },
   },
   server: {
@@ -203,6 +209,8 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        // 注意：Pengu Loader 通过 init/load 钩子加载单一入口 index.js
+        // 多 chunk 在 Pengu 的插件协议下加载顺序难以保证，暂时维持单 chunk
         manualChunks: undefined,
         assetFileNames: (assetInfo) => {
           if (assetInfo.names?.[0]?.endsWith('.css')) return 'index.css'
@@ -212,4 +220,4 @@ export default defineConfig({
     },
   },
   publicDir: false,
-})
+}))

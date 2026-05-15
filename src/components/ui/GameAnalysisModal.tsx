@@ -6,6 +6,7 @@ import { lcu, queueIdToTag } from '@/lib/lcu'
 import { store } from '@/lib/store'
 import { getChampIcon } from '@/lib/assets'
 import { getRating } from '@/lib/features'
+import { logger } from '@/index'
 import type { GameflowTeamPlayer, PlayerChampionSelection } from '@/types/lcu'
 import '@/styles/GameAnalysisModal.css'
 
@@ -363,7 +364,7 @@ export function GameAnalysisModal({ open, onClose, mockData }: GameAnalysisModal
       setRedTeam(sortTeamByPosition(isInTeamOne ? two : one))
     } catch (err) {
       setError('获取对局信息失败')
-      console.error('[GameAnalysis] 加载失败:', err)
+      logger.error('[GameAnalysis] 加载失败:', err)
     } finally {
       setLoading(false)
     }

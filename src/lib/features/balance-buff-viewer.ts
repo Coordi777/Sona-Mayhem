@@ -21,16 +21,16 @@ import { getChampionBalance, getQueueName, type BalanceMode, type ChampionBalanc
 
 // ==================== 图标资源（构建期内联为 base64） ====================
 
-import iconDmgDealt from '@/../assets/balance-icons/dmg_dealt.png'
-import iconDmgTaken from '@/../assets/balance-icons/dmg_taken.png'
-import iconHealing from '@/../assets/balance-icons/healing.png'
-import iconShielding from '@/../assets/balance-icons/shielding.png'
-import iconTenacity from '@/../assets/balance-icons/tenacity.png'
-import iconAbilityHaste from '@/../assets/balance-icons/ability_haste.png'
-import iconAttackSpeed from '@/../assets/balance-icons/attack_speed.png'
-import iconEnergyRegen from '@/../assets/balance-icons/energy_regen.png'
-import iconManaRegen from '@/../assets/balance-icons/mana_regen.png'
-import iconMovementSpeed from '@/../assets/balance-icons/movement_speed.png'
+import iconDmgDealt from '@assets/balance-icons/dmg_dealt.png'
+import iconDmgTaken from '@assets/balance-icons/dmg_taken.png'
+import iconHealing from '@assets/balance-icons/healing.png'
+import iconShielding from '@assets/balance-icons/shielding.png'
+import iconTenacity from '@assets/balance-icons/tenacity.png'
+import iconAbilityHaste from '@assets/balance-icons/ability_haste.png'
+import iconAttackSpeed from '@assets/balance-icons/attack_speed.png'
+import iconEnergyRegen from '@assets/balance-icons/energy_regen.png'
+import iconManaRegen from '@assets/balance-icons/mana_regen.png'
+import iconMovementSpeed from '@assets/balance-icons/movement_speed.png'
 
 /** Wiki 字段名 → 图标资源 */
 const ICON_MAP: Record<string, string> = {

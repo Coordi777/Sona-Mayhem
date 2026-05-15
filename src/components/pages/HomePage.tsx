@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import '@/styles/HomePage.css'
-import sonaIcon from '@/../assets/Champie_Sona_profileicon.png'
+import sonaIcon from '@assets/Champie_Sona_profileicon.png'
 
 function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)

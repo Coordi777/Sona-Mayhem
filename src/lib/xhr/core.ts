@@ -1,4 +1,5 @@
 import type { XhrMatchedRule, XhrRequestMeta, XhrRule } from './types'
+import { logger } from '@/index'
 
 interface XhrHookState {
   installed: boolean
@@ -74,7 +75,7 @@ export function installXhrHook() {
   } as XMLHttpRequest['open']
 
   state.installed = true
-  console.info('[Sona][XHR] Hook installed')
+  logger.info('[Sona][XHR] Hook installed')
 }
 
 function wrapSend(xhr: XMLHttpRequest, state: XhrHookState, meta: XhrRequestMeta) {
@@ -134,7 +135,7 @@ function matchesRule(rule: XhrRule, meta: XhrRequestMeta): rule is XhrMatchedRul
   try {
     return matcher(meta)
   } catch (err) {
-    console.warn('[Sona][XHR] Rule matcher failed: %s', rule.id, err)
+    logger.warn('[Sona][XHR] Rule matcher failed: %s', rule.id, err)
     return false
   }
 }
@@ -223,7 +224,7 @@ function dispatchXhrEvent(xhr: XMLHttpRequest, type: string) {
       : new Event(type)
     xhr.dispatchEvent(event)
   } catch (err) {
-    console.warn('[Sona][XHR] Failed to dispatch %s event', type, err)
+    logger.warn('[Sona][XHR] Failed to dispatch %s event', type, err)
   }
 }
 
@@ -231,12 +232,12 @@ function logBlockedRequest(state: XhrHookState, meta: XhrRequestMeta, rule: XhrM
   if (state.loggedRuleIds.has(rule.id)) return
 
   state.loggedRuleIds.add(rule.id)
-  console.info('[Sona][XHR] Blocked request by rule "%s": %s %s', rule.id, meta.method, meta.url)
+  logger.info('[Sona][XHR] Blocked request by rule "%s": %s %s', rule.id, meta.method, meta.url)
 }
 
 function logRewrittenRequest(state: XhrHookState, meta: XhrRequestMeta, rule: XhrMatchedRule) {
   if (state.loggedRuleIds.has(rule.id)) return
 
   state.loggedRuleIds.add(rule.id)
-  console.info('[Sona][XHR] Rewrote response by rule "%s": %s %s', rule.id, meta.method, meta.url)
+  logger.info('[Sona][XHR] Rewrote response by rule "%s": %s %s', rule.id, meta.method, meta.url)
 }

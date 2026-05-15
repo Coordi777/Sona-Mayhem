@@ -13,12 +13,12 @@ import { opggApi, type OpggChampionsTier, type OpggMode, type OpggRankedDataItem
 import { store } from '@/lib/store'
 import type { GameflowPhase } from '@/types/lcu'
 
-import tierOpIcon from '@/../assets/tier/op.svg'
-import tier1Icon from '@/../assets/tier/t1.svg'
-import tier2Icon from '@/../assets/tier/t2.svg'
-import tier3Icon from '@/../assets/tier/t3.svg'
-import tier4Icon from '@/../assets/tier/t4.svg'
-import tier5Icon from '@/../assets/tier/t5.svg'
+import tierOpIcon from '@assets/tier/op.svg'
+import tier1Icon from '@assets/tier/t1.svg'
+import tier2Icon from '@assets/tier/t2.svg'
+import tier3Icon from '@assets/tier/t3.svg'
+import tier4Icon from '@assets/tier/t4.svg'
+import tier5Icon from '@assets/tier/t5.svg'
 
 const BADGE_TARGETS = [
   { selector: '.champion-grid-champion-thumbnail', size: 22, left: -2, top: 0, showWinRate: false },
