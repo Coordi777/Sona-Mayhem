@@ -5,6 +5,38 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 ---
+
+## [1.4.0-mayhem.1] - 2026-05-15
+
+### 🍴 Fork 起点
+
+本版本是 **Sona-Mayhem** 从上游 [WJZ-P/sona v1.3.0](https://github.com/WJZ-P/sona/releases/tag/v1.3.0) fork 出的第一个版本。
+完全保留上游 Sona 的所有功能,**专为海克斯大乱斗(海斗)玩家** 新增以下专项能力。
+
+### ✨ 新增 — 海克斯大乱斗专项
+
+- **战利品助手** — 一键开宝箱(自动合钥匙)、分解已拥有英雄/皮肤碎片、用蓝色精粹激活够买的英雄碎片(支持保留余额)。基于 `/lol-loot/v1/*` 接口,动态查询 recipe 名兼容国服。
+- **大乱斗智能配装** — ARAM(450)与海克斯大乱斗(KIWI 3100)模式确定英雄后,自动应用 OPGG 推荐符文页 + 闪现/雪球。与现有「智能配装」共存:已记忆偏好的英雄优先走记忆路径。
+- **海克斯大乱斗 augment 速查推送** — 海克斯大乱斗确定英雄后,基于 ARAMGG 数据,把当前英雄 augment 按"前期 / 中期 / 后期"分阶段推荐(每段 Top3) + 核心装备 Top1 推送到选人聊天框(仅自己可见) + 客户端右下角原生通知。
+- **海克斯速查面板** — 新增独立工具弹窗,双 Tab:
+  - 「按英雄查」 — 选英雄查看全 augment 推荐(分阶段 + 胜率/出场/平均选号位)+ 核心装备组合 Top5(完整出装路径 + 图标)
+  - 「按 augment 反查」 — 选 augment 查看各选号阶段全局表现 + Top10 拿这个 augment 最强的英雄
+
+### 🔧 内部改造
+
+- 新增 LCU API 封装:`getPlayerLoot()` / `getLootRecipes(name)` / `craftLootRecipe(recipe, lootIds, repeat)`
+- 新增 store 配置项:`aramSmartLoadout`、`mayhemAugmentTip`
+- 新增类型定义:`PlayerLootItem`、`LootRecipe`
+- 数据缓存:海克斯速查面板的全量 augment 元数据按会话级缓存,反复打开不重复请求
+
+### 📝 文档
+
+- README 重写头部,标注 fork 来源 + 致谢原作者
+- 「关于」页面重写,展示 fork 关系 + 双 GitHub 链接(本 fork + 上游)
+- 添加海克斯大乱斗专项使用建议
+
+---
+
 ## [1.3.0] - 2026-05-12
 
 ### ✨ 新增

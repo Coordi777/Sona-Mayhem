@@ -28,6 +28,7 @@ import { updateGameAnalysisPopup } from '@/lib/features/game-analysis-popup'
 import { updateAutoReturnToLobby } from '@/lib/features/auto-return-to-lobby'
 import { updateOpggBuildRecommendation } from '@/lib/features/opgg-build-recommendation'
 import { preloadChampSelectTierBadgeData, updateChampSelectTierBadge } from '@/lib/features/champselect-tier-badge'
+import { updateAramSmartLoadout } from '@/lib/features/aram-smart-loadout'
 import { setAvailabilityHijackEnabled, setHideTFTEnabled, setHideRightNavTextEnabled } from '@/lib/injections'
 
 // ==================== 共享：查询队友胜率 ====================
@@ -714,6 +715,11 @@ export function initFeatures() {
 
   updateBenchNoCooldown(store.get('benchNoCooldown'))
   store.onChange('benchNoCooldown', updateBenchNoCooldown)
+
+  // 大乱斗智能配装 + 海克斯 augment 速查（共用一个监听，任一开关启用都挂载）
+  updateAramSmartLoadout()
+  store.onChange('aramSmartLoadout', () => updateAramSmartLoadout())
+  store.onChange('mayhemAugmentTip', () => updateAramSmartLoadout())
 
   updateAnalyzeTeamPower(store.get('analyzeTeamPower'))
   store.onChange('analyzeTeamPower', updateAnalyzeTeamPower)

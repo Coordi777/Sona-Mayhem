@@ -1,26 +1,35 @@
-## 一款基于Pengu Loader的全服可用英雄联盟客户端增强插件
+## 一款基于Pengu Loader的全服可用英雄联盟客户端增强插件 ·【海克斯大乱斗专项 Fork】
+
+> 🍴 本仓库 fork 自 [WJZ-P/sona](https://github.com/WJZ-P/sona),在保留原 Sona **全部功能** 的基础上,**针对海克斯大乱斗(海斗)玩家** 新增战利品助手、大乱斗智能配装、海克斯 augment 速查面板等专项功能。
+>
+> 💖 衷心感谢原作者 **[@WJZ_P](https://github.com/WJZ-P)** 的开源工作,本 fork 完全遵循原项目 **AGPL-3.0** 协议。
+
 <!-- PROJECT SHIELDS -->
 
 <div align="center">
 
-  <a href="https://github.com/WJZ-P/sona/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/WJZ-P/sona.svg?style=flat-square" alt="Contributors" style="height: 30px">
+  <a href="https://github.com/Coordi777/sona-mayhem/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/Coordi777/sona-mayhem.svg?style=flat-square" alt="Contributors" style="height: 30px">
   </a>
   &nbsp;
-  <a href="https://github.com/WJZ-P/sona/network/members">
-    <img src="https://img.shields.io/github/forks/WJZ-P/sona.svg?style=flat-square" alt="Forks" style="height: 30px">
+  <a href="https://github.com/Coordi777/sona-mayhem/network/members">
+    <img src="https://img.shields.io/github/forks/Coordi777/sona-mayhem.svg?style=flat-square" alt="Forks" style="height: 30px">
   </a>
   &nbsp;
-  <a href="https://github.com/WJZ-P/sona/stargazers">
-    <img src="https://img.shields.io/github/stars/WJZ-P/sona.svg?style=flat-square" alt="Stargazers" style="height: 30px">
+  <a href="https://github.com/Coordi777/sona-mayhem/stargazers">
+    <img src="https://img.shields.io/github/stars/Coordi777/sona-mayhem.svg?style=flat-square" alt="Stargazers" style="height: 30px">
   </a>
   &nbsp;
-  <a href="https://github.com/WJZ-P/sona/issues">
-    <img src="https://img.shields.io/github/issues/WJZ-P/sona.svg?style=flat-square" alt="Issues" style="height: 30px">
+  <a href="https://github.com/Coordi777/sona-mayhem/issues">
+    <img src="https://img.shields.io/github/issues/Coordi777/sona-mayhem.svg?style=flat-square" alt="Issues" style="height: 30px">
   </a>
   &nbsp;
-  <a href="https://github.com/WJZ-P/sona/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/WJZ-P/sona.svg?style=flat-square" alt="License" style="height: 30px">
+  <a href="https://github.com/Coordi777/sona-mayhem/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/Coordi777/sona-mayhem.svg?style=flat-square" alt="License" style="height: 30px">
+  </a>
+  &nbsp;
+  <a href="https://github.com/WJZ-P/sona">
+    <img src="https://img.shields.io/badge/forked%20from-WJZ--P%2Fsona-c8aa6e?style=flat-square" alt="Forked from WJZ-P/sona" style="height: 30px">
   </a>
 
 </div>
@@ -30,19 +39,25 @@
 <!-- PROJECT LOGO -->
 
 <p align="center">
-  <a href="https://github.com/WJZ-P/sona/">
+  <a href="https://github.com/Coordi777/sona-mayhem/">
     <img src="assets/Champie_Sona_profileicon.png" alt="Logo" width="200" height="200" style="border-radius: 4px;">
   </a>
 </p>
 
-<h1 align="center">Sona</h1>
+<h1 align="center">Sona-Mayhem</h1>
+
+<p align="center">
+  <em>♫ Hexgates Mayhem Edition ♫</em>
+</p>
 
 <p align="center">
   <a href="#-安装">快速开始</a>
   ·
-  <a href="https://github.com/WJZ-P/sona/issues">报告 Bug</a>
+  <a href="https://github.com/Coordi777/sona-mayhem/issues">报告 Bug</a>
   ·
-  <a href="https://github.com/WJZ-P/sona/issues">提出新特性</a>
+  <a href="https://github.com/Coordi777/sona-mayhem/issues">提出新特性</a>
+  ·
+  <a href="https://github.com/WJZ-P/sona">查看上游 Sona</a>
 </p>
 
 <!-- LYRICS -->
@@ -82,11 +97,25 @@
   <img src="markdown/示例.png" alt="Sona 插件面板示例" width="100%">
 </p>
 
-<p align="center"><em>▲ Sona 插件面板 — 按 F1 随时呼出，集成战绩查询、秒抢英雄、队友分析等丰富功能</em></p>
+<p align="center"><em>▲ Sona-Mayhem 插件面板 — 按 F1 随时呼出,集成战绩查询、秒抢英雄、队友分析等丰富功能</em></p>
+
+> **Sona-Mayhem 与 Sona 的关系:**
+> - ✅ **完全兼容** — 原 Sona 的所有功能(自动接受、秒抢、战绩、自定义生涯背景、段位伪装、回放…)在本 fork 中**一律保留**
+> - 🆕 **专项增强** — 在原 Sona 基础上**专为海克斯大乱斗(海斗)玩家**新增 4 大功能:战利品助手、大乱斗智能配装、海克斯 augment 速查、海克斯速查面板
+> - 🍴 **持续追上游** — 长期跟踪 [WJZ-P/sona](https://github.com/WJZ-P/sona) 的更新,你享受 Sona 全部 feature 的同时多一份海斗专属能力
 
 <br>
 
 <h2 id="功能特性">✨ 功能特性</h2>
+
+### 🆕 海克斯大乱斗专项 Fork 新增
+
+|  | 功能 | 说明 |
+|:----:|------|------|
+| 🎁 | **战利品助手** | 一键开宝箱(自动合钥匙)/ 分解已拥有英雄&皮肤碎片 / 蓝精激活够买英雄,支持保留余额 |
+| ⭐ | **大乱斗智能配装** | ARAM / 海克斯大乱斗确定英雄后,自动应用 OPGG 推荐符文 + 闪现 / 雪球;尊重已有偏好 |
+| 🔱 | **海克斯大乱斗 augment 速查** | 选人后按"前期 / 中期 / 后期"分桶推送 augment 排行 + 核心装备到聊天框 + 客户端通知 |
+| 🔍 | **海克斯速查面板** | 双 Tab:**按英雄查**(全 augment + 核心装备) · **按 augment 反查**(各阶段表现 + Top10 最强英雄)。数据源:aramgg.com |
 
 ### 对局增强
 
@@ -156,13 +185,15 @@
 <img src="markdown/pengu1.png" alt="Pengu Loader" width="70%">
 </p>
 
-接着点击上方右侧的Plugins,打开插件目录，从本项目的release中下载压缩包(不要下载项目源码使用)，解压出sona文件夹并拖动至插件目录，注意，loader不支持直接拖入文件，应该点击右下角打开插件目录，然后将sona文件夹拖动进去。
+接着点击上方右侧的Plugins,打开插件目录，从本项目的release中下载压缩包(不要下载项目源码使用)，解压出 **sona-mayhem** 文件夹并拖动至插件目录，注意，loader不支持直接拖入文件，应该点击右下角打开插件目录，然后将 sona-mayhem 文件夹拖动进去。
+
+> ⚠️ **从原 Sona 切换到 Sona-Mayhem 的玩家:** 本 fork 的插件目录名是 `sona-mayhem`(不是 `sona`),两者**可以共存**(分别是两个独立插件目录),也可以删除旧的 `sona` 目录避免重复加载。配置/备份按账号 PUUID 隔离,与原 Sona **互不干扰**。
 
 <p align="center">
 <img src="markdown/path.png" alt="Pengu Loader" width="70%">
 </p>
 
-注意，这里要把sona文件夹拖动进来，并确保里面应该是两个index文件。
+注意，这里要把 sona-mayhem 文件夹拖动进来，并确保里面应该是两个index文件。
 
 <p align="center">
 <img src="markdown/pengu2.png" alt="Pengu Loader" width="70%">
@@ -178,6 +209,8 @@
 2. 点击 Play 按钮旁的 **Sona 头像图标**，或按 **F1** 打开面板
 3. 在「工具」页开启/配置各项功能
 4. 所有设置自动持久化，下次启动自动恢复
+
+> 💡 **海斗玩家建议开启的开关:**「大乱斗智能配装」+「海克斯大乱斗 augment 速查」+「大乱斗无 CD 换英雄」+「自动接受对局」+「对局结束自动返回房间」,一套全自动闭环。
 
 <br>
 
@@ -226,7 +259,7 @@
 ## 📁 项目结构
 
 ```
-sona/
+sona-mayhem/
 ├── src/
 │   ├── index.tsx                    # 插件入口（init/load 生命周期）
 │   ├── App.tsx                      # 主应用（侧边栏 + 页面路由）
@@ -240,7 +273,12 @@ sona/
 │   │   ├── modal.ts                 # 模态窗口状态 + 快捷键
 │   │   ├── hooks.ts                 # React 自定义 hooks
 │   │   ├── logger.ts                # 日志系统
-│   │   └── utils.ts                 # 工具函数
+│   │   ├── utils.ts                 # 工具函数
+│   │   ├── opgg-api.ts              # OP.GG 数据客户端
+│   │   ├── aramgg-api.ts            # 🆕 ARAMGG 数据客户端（augment / 装备）
+│   │   └── features/
+│   │       ├── loot-helper.ts       # 🆕 战利品助手业务层
+│   │       └── aram-smart-loadout.ts # 🆕 大乱斗智能配装 + augment 推送
 │   ├── types/
 │   │   └── lcu.ts                   # LCU API 完整类型定义
 │   ├── components/
@@ -255,17 +293,12 @@ sona/
 │   │       ├── Sidebar.tsx          # 侧边栏导航
 │   │       ├── MatchHistoryModal.tsx # 战绩查询弹窗
 │   │       ├── GameAnalysisModal.tsx # 对局战力分析弹窗
+│   │       ├── LootHelperModal.tsx   # 🆕 战利品助手弹窗
+│   │       ├── MayhemAugmentLookupModal.tsx # 🆕 海克斯速查面板（双 Tab）
 │   │       ├── ProfileBackgroundPicker.tsx  # 生涯背景选择器
 │   │       ├── ChampSelectIconEffect.tsx    # 选人阶段头像粒子特效
-│   │       ├── SettingCard.tsx       # 设置卡片
-│   │       ├── SonaButton.tsx       # 按钮
-│   │       ├── SonaSwitch.tsx       # 开关
-│   │       ├── SonaSelect.tsx       # 下拉选择
-│   │       ├── SonaInput.tsx        # 输入框
-│   │       ├── SonaSlider.tsx       # 滑块
-│   │       ├── SonaCheckbox.tsx     # 复选框
-│   │       └── icons.tsx            # 图标集
-│   └── styles/                      # 18 个 CSS 文件
+│   │       └── ...
+│   └── styles/                      # 23 个 CSS 文件
 ├── .github/
 │   └── workflows/
 │       └── release.yml              # CI：推 tag 自动构建 + 发布 Release
@@ -306,39 +339,49 @@ sona/
 
 <h2 id="to-do-list">📝 To Do List</h2>
 
+> ⭐ 标记 = 本 fork(Sona-Mayhem)新增,其余继承自上游 Sona
+
 - [x] **自动接受对局**
 - [x] **大乱斗无CD换英雄**
-- [x] **秒抢英雄**（排位/匹配秒锁 + 仅预选模式）
-- [x] **队友战力分析**（自动查战绩 + 聊天框发送）
-- [x] **英雄选择头像粒子特效**（5 档胜率视觉反馈）
-- [x] **战绩查询系统**（100 场贪婪拉取 + 模式过滤）
-- [x] **自定义生涯背景**（全皮肤选择器）
-- [x] **开黑好友标记**（同局好友颜色分组）
+- [x] **秒抢英雄**(排位/匹配秒锁 + 仅预选模式)
+- [x] **队友战力分析**(自动查战绩 + 聊天框发送)
+- [x] **英雄选择头像粒子特效**(5 档胜率视觉反馈)
+- [x] **战绩查询系统**(100 场贪婪拉取 + 模式过滤)
+- [x] **自定义生涯背景**(全皮肤选择器)
+- [x] **开黑好友标记**(同局好友颜色分组)
 - [x] **段位伪装**
 - [x] **回放下载 & 观看**
-- [x] **设置备份/恢复**（常规配置 + 热键双通道）
-- [x] **增强在线状态**（手机在线/隐身 + 持久化恢复）
+- [x] **设置备份/恢复**(常规配置 + 热键双通道)
+- [x] **增强在线状态**(手机在线/隐身 + 持久化恢复)
 - [x] **全局粒子美化**
-- [x] **全局战力分析弹窗**（双方胜率/KDA/段位/开黑分组 + 客户端内嵌按钮）
-- [x] **对局结束自动返回房间**（自动排队/仅返回房间 + 开黑车队保留 + 重试机制）
-- [x] **平衡性调整 buff 提示**（大乱斗/无限火力数值调整悬停展示）
+- [x] **全局战力分析弹窗**(双方胜率/KDA/段位/开黑分组 + 客户端内嵌按钮)
+- [x] **对局结束自动返回房间**(自动排队/仅返回房间 + 开黑车队保留 + 重试机制)
+- [x] **平衡性调整 buff 提示**(大乱斗/无限火力数值调整悬停展示)
 - [x] **DOM 自愈注入机制**
+- [x] ⭐ **战利品助手**(一键开宝箱/合钥匙/分解碎片/激活英雄)
+- [x] ⭐ **大乱斗智能配装**(自动符文 + 闪现/雪球)
+- [x] ⭐ **海克斯大乱斗 augment 速查**(分阶段 Top 推送 + 装备推荐)
+- [x] ⭐ **海克斯速查面板**(双 Tab:按英雄查 + 按 augment 反查)
+- [ ] ⭐ **备战席智能换英雄**(收藏夹 + 自动 swap)
+- [ ] ⭐ **任意玩家段位查询**(SGP leagues-ledge 绕过段位隐藏)
+- [ ] ⭐ **ARAM 平衡查询面板**(全英雄 buff/nerf 总览)
+- [ ] ⭐ **任务/战令自动领奖**
 - [ ] **多语言支持**
 - [ ] **自动 Ban 英雄**
-- [ ] **符文推荐 & 自动配置**
-- [ ] **对局数据看板**（实时数据统计）
+- [ ] **对局数据看板**(实时数据统计)
 
 <br>
 
 ## 📄 License
 
-该项目签署了 AGPL-3.0 授权许可，详情请参阅 [LICENSE](https://github.com/WJZ-P/sona/blob/main/LICENSE)
+该项目签署了 AGPL-3.0 授权许可（继承自原 Sona），详情请参阅 [LICENSE](https://github.com/Coordi777/sona-mayhem/blob/main/LICENSE)
 
 <br>
 
 <div align="center">
 
-Made by **WJZ_P** with love ❤
+Forked & maintained by **[Coordi777](https://github.com/Coordi777)** ·
+原作者 **[WJZ_P](https://github.com/WJZ-P)** ❤
 
 </div>
 
@@ -354,25 +397,39 @@ Made by **WJZ_P** with love ❤
 
 <h2 id="致谢">💝 致谢</h2>
 
-Sona 能走到今天，离不开这些前辈们的无私开源。站在前人的肩膀上，我才能看得更远。在此郑重感谢这些项目，我从它们的代码里学到了很多，真的超级感谢大家～ ₍ᐢ..ᐢ₎♡
+Sona-Mayhem 站在了无数前辈的肩膀上。在此郑重感谢这些项目,我从它们的代码与数据里学到了很多 ₍ᐢ..ᐢ₎♡
+
+### 🌟 上游项目(本 fork 直接基于)
+
+- 🎯 **[WJZ-P / sona](https://github.com/WJZ-P/sona)** —— **本 fork 的直接上游**,Sona-Mayhem 的所有"非海斗专项"功能均完全继承自此项目。万分感谢原作者 [@WJZ_P](https://github.com/WJZ-P) 的开源贡献!❤️
+
+### 📊 数据源致谢
+
+- 🔱 **[ARAMGG](https://aramgg.com/zh-CN)** —— 海克斯大乱斗 augment / 装备推荐数据全部来自此站,本 fork 的「海克斯速查面板」核心数据流即基于其公开接口
+- 📦 **[OP.GG](https://op.gg/)** —— 大乱斗符文推荐数据
+- 🎮 **[League of Legends Wiki](https://leagueoflegends.fandom.com/wiki/Module:ChampionData/data)** —— 平衡性调整数据
+
+### 🙏 上游 Sona 致谢的祖师项目(继承)
 
 - [**BakaFT / BetterTencentLCU**](https://github.com/BakaFT/BetterTencentLCU)
 - [**imunproductive / upl**](https://github.com/imunproductive/upl)
-- [**BakaFT / CustomHookLoader**](https://github.com/BakaFT/CustomHookLoader) 
-- [**nomi-san / balance-buff-viewer**](https://github.com/nomi-san/balance-buff-viewer) 
-- [**LeagueAkari / LeagueAkari**](https://github.com/LeagueAkari/LeagueAkari) 
+- [**BakaFT / CustomHookLoader**](https://github.com/BakaFT/CustomHookLoader)
+- [**nomi-san / balance-buff-viewer**](https://github.com/nomi-san/balance-buff-viewer)
+- [**LeagueAkari / LeagueAkari**](https://github.com/LeagueAkari/LeagueAkari)
 
-每一个 commit、每一行注释、每一个巧妙的设计，都是前辈们留给社区的珍贵财富。Sona 只是一个小小的学习者，未来也会把自己学到的东西继续开源回馈出去。感谢每一位奉献者 ✨
+每一个 commit、每一行注释、每一个巧妙的设计,都是前辈们留给社区的珍贵财富。Sona-Mayhem 只是个微小的延伸,未来也会把学到的东西继续开源回馈出去 ✨
 
 <br>
 
 <h2 id="重要声明">📢 重要声明</h2>
 
-> 由于项目的特殊性，本项目 **不接受任何形式的赞助** ᕙ(⇀‸↼‶)ᕗ
+> 本 fork **不接受任何形式的赞助** ᕙ(⇀‸↼‶)ᕗ
 >
-> 也 **不接受 Pull Request** (｡•́︿•̀｡)
+> 欢迎到 [Issues](https://github.com/Coordi777/sona-mayhem/issues) 反馈 Bug 或提建议 ₍ᐢ..ᐢ₎♡
 >
-> 但是非常欢迎提出建议和反馈！请到 [Issues](https://github.com/WJZ-P/sona/issues) 畅所欲言～ ₍ᐢ..ᐢ₎♡
+> ⚠️ **跟"海斗专项"无关的功能问题**(原 Sona 已有的功能 bug)建议优先去 [上游 WJZ-P/sona Issues](https://github.com/WJZ-P/sona/issues) 反馈,有助于所有 Sona 用户受益。
+>
+> 🤝 PR 视情况而定 — 海斗增强相关的 PR 欢迎,通用功能 PR 建议先打到上游 Sona。
 
 <br>
 
@@ -380,4 +437,4 @@ Sona 能走到今天，离不开这些前辈们的无私开源。站在前人的
 
 ## ⭐ Star 历史
 
-[![Stargazers over time](https://starchart.cc/WJZ-P/sona.svg?variant=adaptive)](https://starchart.cc/WJZ-P/sona)
+[![Stargazers over time](https://starchart.cc/Coordi777/sona-mayhem.svg?variant=adaptive)](https://starchart.cc/Coordi777/sona-mayhem)

@@ -37,6 +37,10 @@ export interface SonaConfig {
   unlockAvailability: boolean
   /** 大乱斗无CD换英雄 */
   benchNoCooldown: boolean
+  /** 大乱斗智能配装：选好英雄后自动应用 OPGG 推荐符文 + 闪现/雪球（仅 ARAM 与海克斯大乱斗） */
+  aramSmartLoadout: boolean
+  /** 海克斯大乱斗 augment 速查：选好英雄后把 ARAMGG Top 5 augment 推到聊天框 + 桌面通知 */
+  mayhemAugmentTip: boolean
   /** 侧边栏收缩状态 */
   sidebarCollapsed: boolean
   /** 在线状态 */
@@ -151,6 +155,8 @@ const DEFAULT_CONFIG: SonaConfig = {
   unlockStatus: true,
   unlockAvailability: false,
   benchNoCooldown: false,
+  aramSmartLoadout: false,
+  mayhemAugmentTip: false,
   sidebarCollapsed: false,
   availability: 'chat',
   statusMessage: {},

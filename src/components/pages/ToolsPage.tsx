@@ -5,6 +5,8 @@ import { SonaInput } from '@/components/ui/SonaInput'
 import { SonaSwitch } from '@/components/ui/SonaSwitch'
 import { SonaSelect } from '@/components/ui/SonaSelect'
 import { MatchHistoryModal } from '@/components/ui/MatchHistoryModal'
+import { LootHelperModal } from '@/components/ui/LootHelperModal'
+import { MayhemAugmentLookupModal } from '@/components/ui/MayhemAugmentLookupModal'
 import { searchChampions, getChampionById, type ChampionInfo } from '@/lib/assets'
 import { lcu } from '@/lib/lcu'
 import { logger } from '@/index'
@@ -106,6 +108,8 @@ export function ToolsPage() {
   const [unlockAvailability, setUnlockAvailability] = useState(store.get('unlockAvailability'))
   const [unlockChromas, setUnlockChromas] = useState(store.get('unlockChromas'))
   const [benchNoCooldown, setBenchNoCooldown] = useState(store.get('benchNoCooldown'))
+  const [aramSmartLoadout, setAramSmartLoadout] = useState(store.get('aramSmartLoadout'))
+  const [mayhemAugmentTip, setMayhemAugmentTip] = useState(store.get('mayhemAugmentTip'))
   const [hideTFT, setHideTFT] = useState(store.get('hideTFT'))
   const [hideRightNavText, setHideRightNavText] = useState(store.get('hideRightNavText'))
   const [windowEffect, setWindowEffect] = useState(store.get('windowEffect'))
@@ -152,6 +156,8 @@ export function ToolsPage() {
   const [matchModalOpen, setMatchModalOpen] = useState(false)
   const [matchModalPuuid, setMatchModalPuuid] = useState('')
   const [matchModalName, setMatchModalName] = useState('')
+  const [lootHelperOpen, setLootHelperOpen] = useState(false)
+  const [mayhemLookupOpen, setMayhemLookupOpen] = useState(false)
 
   useEffect(() => {
     const unsubs = [
@@ -162,6 +168,8 @@ export function ToolsPage() {
       store.onChange('unlockAvailability', setUnlockAvailability),
       store.onChange('unlockChromas', setUnlockChromas),
       store.onChange('benchNoCooldown', setBenchNoCooldown),
+      store.onChange('aramSmartLoadout', setAramSmartLoadout),
+      store.onChange('mayhemAugmentTip', setMayhemAugmentTip),
       store.onChange('hideTFT', setHideTFT),
       store.onChange('windowEffect', setWindowEffect),
       store.onChange('champSelectAssist', setChampSelectAssist),
@@ -318,6 +326,32 @@ export function ToolsPage() {
             checked={benchNoCooldown}
             onChange={(v) => { setBenchNoCooldown(v); store.set('benchNoCooldown', v) }}
           />
+        </SettingCard>
+        <SettingCard
+          title="大乱斗智能配装"
+          description="ARAM / 海克斯大乱斗中确定英雄后，自动应用 OPGG 推荐符文 + 闪现/雪球。已记忆智能配装的英雄会跳过。"
+        >
+          <SonaSwitch
+            checked={aramSmartLoadout}
+            onChange={(v) => { setAramSmartLoadout(v); store.set('aramSmartLoadout', v) }}
+          />
+        </SettingCard>
+        <SettingCard
+          title="海克斯大乱斗 augment 速查"
+          description="海克斯大乱斗确定英雄后，把当前英雄 augment Top5 胜率推送到选人聊天框 + 客户端通知（基于 ARAMGG 数据）。"
+        >
+          <SonaSwitch
+            checked={mayhemAugmentTip}
+            onChange={(v) => { setMayhemAugmentTip(v); store.set('mayhemAugmentTip', v) }}
+          />
+        </SettingCard>
+        <SettingCard
+          title="海克斯大乱斗速查面板"
+          description="按英雄查全 augment + 核心装备推荐；按 augment 反查最强英雄。数据源：aramgg.com。"
+        >
+          <SonaButton variant="primary" onClick={() => setMayhemLookupOpen(true)}>
+            打开速查面板
+          </SonaButton>
         </SettingCard>
         <SettingCard
           title="分析友方战力"
@@ -803,6 +837,30 @@ export function ToolsPage() {
           </SonaButton>
         </div>
       </SettingGroup>
+
+      <SettingGroup title="战利品助手">
+        <p className="sona-subtitle" style={{ marginBottom: 10 }}>
+          一键开宝箱 / 合钥匙 / 分解 / 激活英雄碎片，所有操作通过 LCU 官方接口执行。
+        </p>
+        <SettingCard
+          title="打开战利品助手"
+          description="清空堆积的宝箱、钥匙碎片，分解已拥有英雄/皮肤的碎片回血蓝精/橙精。"
+        >
+          <SonaButton variant="primary" onClick={() => setLootHelperOpen(true)}>
+            打开
+          </SonaButton>
+        </SettingCard>
+      </SettingGroup>
+
+      <LootHelperModal
+        open={lootHelperOpen}
+        onClose={() => setLootHelperOpen(false)}
+      />
+
+      <MayhemAugmentLookupModal
+        open={mayhemLookupOpen}
+        onClose={() => setMayhemLookupOpen(false)}
+      />
 
       <SettingGroup title="设置备份">
         <p className="sona-subtitle" style={{ marginBottom: 10 }}>备份当前客户端设置（快捷键、界面布局等），支持多个命名存档。</p>

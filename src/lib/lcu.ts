@@ -197,6 +197,76 @@ export interface ChallengePlayerPreferencesPayload {
   challengeIds?: Array<string | number>
 }
 
+// ==================== 战利品（Loot）类型 ====================
+
+/**
+ * 单个战利品项 — GET /lol-loot/v1/player-loot 列表元素
+ *
+ * 注意：国服与外服字段基本一致，但部分 enum 值（如 rarity、type）国服可能多/少几项。
+ * 这里只声明 Sona 当前用到的字段，未列出的字段可通过 `unknown` 索引访问。
+ */
+export interface PlayerLootItem {
+  /** 战利品唯一名（如 `CHEST_generic`、`MATERIAL_key`、`CHAMPION_RENTAL_157`） */
+  lootName: string
+  /** 类型：CHEST / KEY / MATERIAL / CHAMPION_RENTAL / SKIN_RENTAL / WARDSKIN_RENTAL / EMOTE_RENTAL / STATSTONE_SHARDS / CURRENCY ... */
+  type: string
+  /** 拥有数量；蓝色精粹/橙色精粹存在 type=CURRENCY 的同一项里，count 即余额 */
+  count: number
+  /** 关联 ID（英雄碎片 → championId；皮肤碎片 → skinId 等） */
+  refId: string
+  /** 商城物品 ID（用于查图标 / 价格） */
+  storeItemId: number
+  /** 战利品本地化名称（如 "海克斯宝箱"、"卡蜜尔英雄碎片"） */
+  localizedName: string
+  /** 战利品本地化描述 */
+  localizedDescription?: string
+  /** 稀有度：COMMON / RARE / EPIC / MYTHIC / LEGENDARY / ULTIMATE */
+  rarity: string
+  /** 单件分解所得（碎片：分解可获得的精粹值；其它通常 0） */
+  disenchantValue: number
+  /** 兑换永久所需精粹值（英雄/皮肤碎片） */
+  upgradeEssenceValue: number
+  /** 兑换永久所需的精粹类型（CURRENCY_champion / CURRENCY_cosmetic 等） */
+  upgradeEssenceName: string
+  /** 是否已拥有该英雄/皮肤永久（碎片激活前提示）：ALREADY_OWNED / UNAVAILABLE / OK ... */
+  redeemableStatus: string
+  /** 战利品图片 URL（客户端会注入） */
+  imagePath?: string
+  /** 战利品商店 / 商城价格（碎片对应英雄/皮肤的 RP/蓝精价） */
+  value?: number
+  /** 是否可商店购买（部分限定碎片只能合成不可分解） */
+  itemDesc?: string
+  /** 其他扩展字段 */
+  [key: string]: unknown
+}
+
+/**
+ * 战利品 recipe（合成配方） — GET /lol-loot/v1/recipes/initial-item/{lootName}
+ *
+ * 一个 recipe 描述了"用什么材料合成什么产物"。Sona 里只关心 recipeName + type。
+ */
+export interface LootRecipe {
+  /** recipe 名（执行合成时使用） */
+  recipeName: string
+  /** recipe 类型：OPEN / FORGE / DISENCHANT / REDEEM / UPGRADE / CRAFT 等 */
+  type: string
+  /** 描述文本 */
+  description?: string
+  /** 输入材料槽位 */
+  slots: Array<{
+    lootName?: string
+    lootNameRegex?: string
+    quantity: number
+  }>
+  /** 产出物 */
+  outputs?: Array<{
+    lootName: string
+    quantity: number
+  }>
+  /** 其他扩展字段 */
+  [key: string]: unknown
+}
+
 function patch<T = unknown>(endpoint: string, body?: unknown): Promise<T> {
   return request<T>(endpoint, {
     method: 'PATCH',
@@ -1177,6 +1247,60 @@ class LCUManager {
     }
   }
 
+
+  // ==================== 战利品（Loot / 海克斯战利品） ====================
+
+  /**
+   * 获取玩家战利品仓库全量数据
+   *
+   * 国服 / 外服字段一致；常见 type:
+   * - `CHEST`            海克斯宝箱（含特殊宝箱、世界赛宝箱等）
+   * - `KEY`              海克斯钥匙
+   * - `MATERIAL`         钥匙碎片（lootName 含 `MATERIAL_key_fragment`）/ 蓝色精粹（CURRENCY_champion）
+   *                      / 橙色精粹（CURRENCY_cosmetic）/ 紫色精粹等
+   * - `CHAMPION_RENTAL`  英雄碎片（消耗蓝色精粹可激活）
+   * - `SKIN_RENTAL`      皮肤碎片（消耗橙色精粹可激活）
+   * - `WARDSKIN_RENTAL`  眼皮肤碎片
+   * - `EMOTE_RENTAL`     表情碎片
+   * - `STATSTONE_SHARDS` 击杀印记碎片
+   *
+   * @see https://lcu.kebs.dev/swagger.html#operations-tag-loot
+   */
+  getPlayerLoot(): Promise<PlayerLootItem[]> {
+    return get<PlayerLootItem[]>('/lol-loot/v1/player-loot')
+  }
+
+  /**
+   * 查询某个战利品项可执行的所有合成 recipe
+   *
+   * 同一物品在不同版本/服务器 recipe 名可能不同（国服尤其）。
+   * 用这个接口动态拿，比写死 recipe 名鲁棒。
+   *
+   * 例：CHEST_generic 通常返回 `CHEST_generic_OPEN`、`CHEST_generic_OPEN_LOOT` 等。
+   */
+  getLootRecipes(lootName: string): Promise<LootRecipe[]> {
+    return get<LootRecipe[]>(`/lol-loot/v1/recipes/initial-item/${encodeURIComponent(lootName)}`)
+  }
+
+  /**
+   * 执行战利品 recipe（开箱、合钥匙、分解、激活永久 等都走这个接口）
+   *
+   * @param recipeName 合成 recipe 名（如 `CHEST_generic_OPEN`、`MATERIAL_key_forge`、
+   *                   `CHAMPION_RENTAL_disenchant`、`CHAMPION_RENTAL_redeem`）
+   * @param lootIds    参与合成的 lootName 数组（如 `['CHEST_generic']`、`['CHAMPION_RENTAL_157']`）
+   * @param repeat     执行次数（一次最多服务端会限制，建议 ≤ 100）
+   */
+  async craftLootRecipe(
+    recipeName: string,
+    lootIds: string[],
+    repeat = 1,
+  ): Promise<unknown> {
+    const url = `/lol-loot/v1/recipes/${encodeURIComponent(recipeName)}/craft?repeat=${repeat}`
+    return request(url, {
+      method: 'POST',
+      body: JSON.stringify(lootIds),
+    })
+  }
 
   // ==================== 通知 ====================
 
