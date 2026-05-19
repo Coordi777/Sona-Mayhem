@@ -25,8 +25,9 @@
 | 功能 | 说明 |
 |------|------|
 | 🎁 **战利品助手** | 一键开宝箱（自动合钥匙）、分解碎片、蓝精激活英雄，支持保留余额 |
-| ⭐ **大乱斗智能配装** | 选定英雄后自动应用 OPGG 推荐符文 + 闪现/雪球；尊重已有偏好 |
-| 🔱 **海克斯 augment 速查** | 选人后按"前/中/后期"分桶推送 augment 排行 + 核心装备 |
+| ⭐ **大乱斗智能配装** | 模式分流，互不干涉：普通 ARAM 自动应用 OPGG 推荐符文（不动你的召唤师技能偏好）；海斗 KIWI 自动按英雄换最优召唤师技能（海斗游戏内无符文系统，跳过符文应用） |
+| 🔱 **海克斯 augment 速查** | 选人后按"前/中/后期"分桶推送 augment 排行 + 核心装备到聊天框 + 桌面通知 |
+| 📊 **海克斯常驻面板** | 海斗 BP 阶段在屏幕右侧浮窗显示当前英雄的 augment 推荐 + 核心装备组合，锁定/换英雄实时刷新 |
 | 🔍 **海克斯速查面板** | 双 Tab：按英雄查 augment / 按 augment 反查最强英雄（数据：aramgg.com） |
 
 ### 继承自 Sona 的核心功能
@@ -54,7 +55,7 @@
 2. 点击 Play 旁的 **Sona 头像图标**，或按 **F1** 打开面板
 3. 在「工具」页开启/配置功能，所有设置自动持久化
 
-> 💡 **海斗玩家推荐组合**：大乱斗智能配装 + 海克斯 augment 速查 + 大乱斗无 CD 换英雄 + 自动接受对局 + 对局结束自动返回房间，一套全自动闭环。
+> 💡 **海斗玩家推荐组合**：大乱斗智能配装 + 海克斯 augment 速查 + **海克斯常驻面板** + 大乱斗无 CD 换英雄 + 自动接受对局 + 对局结束自动返回房间，一套全自动闭环。
 
 ## 🏗️ 技术栈
 
@@ -64,7 +65,7 @@ TypeScript + React + Vite，运行在 Pengu Loader 之上，通过 LCU API（RES
 - `LCUManager` — REST + WebSocket 双通道单例
 - `InjectorManager` — MutationObserver 自愈，DOM 被刷掉自动补回
 - `SonaStore` — 持久化配置 + 变化监听
-- 数据源：[ARAMGG](https://aramgg.com/zh-CN)（augment/装备）、[OP.GG](https://op.gg/)（符文）、[LoL Wiki](https://leagueoflegends.fandom.com/wiki/Module:ChampionData/data)（平衡数值）
+- 数据源：[ARAMGG](https://aramgg.com/zh-CN)（海斗 augment / 核心装备 / 海斗英雄 T 级）、[OP.GG](https://op.gg/)（普通模式英雄 T 级 / 符文 / 召唤师技能）、[LoL Wiki](https://leagueoflegends.fandom.com/wiki/Module:ChampionData/data)（平衡数值）
 
 ## ⚠️ 注意事项
 
@@ -86,8 +87,8 @@ TypeScript + React + Vite，运行在 Pengu Loader 之上，通过 LCU API（RES
 ## 💝 致谢
 
 - 🎯 [**WJZ-P / sona**](https://github.com/WJZ-P/sona) — 本 fork 的直接上游，所有非海斗专项功能均完全继承自此项目
-- 🔱 [**ARAMGG**](https://aramgg.com/zh-CN) — 海克斯大乱斗 augment / 装备推荐数据源
-- 📦 [**OP.GG**](https://op.gg/) — 大乱斗符文推荐数据
+- 🔱 [**ARAMGG**](https://aramgg.com/zh-CN) — 海克斯大乱斗 augment / 核心装备 / 海斗英雄 T 级数据源
+- 📦 [**OP.GG**](https://op.gg/) — 普通模式英雄 T 级 + 大乱斗符文 + 召唤师技能推荐数据
 - 🎮 [**LoL Wiki**](https://leagueoflegends.fandom.com/wiki/Module:ChampionData/data) — 平衡性调整数据
 
 以及上游 Sona 致谢的祖师项目：[BetterTencentLCU](https://github.com/BakaFT/BetterTencentLCU) · [upl](https://github.com/imunproductive/upl) · [CustomHookLoader](https://github.com/BakaFT/CustomHookLoader) · [balance-buff-viewer](https://github.com/nomi-san/balance-buff-viewer) · [LeagueAkari](https://github.com/LeagueAkari/LeagueAkari)
