@@ -19,18 +19,24 @@ import { SonaSelect } from '@/components/ui/SonaSelect'
 import {
   aramggApi,
   type AramggChampionRecommendation,
-  type AramggMayhemAugments,
-  type AramggAugmentStatsEntry,
 } from '@/lib/aramgg-api'
 import {
   getAllChampions,
-  getAugmentInfo,
   getChampIcon,
   getChampionById,
   getItemIcon,
   getItemName,
 } from '@/lib/assets'
-import { logger } from '@/index'
+import {
+  STAGE_BUCKETS,
+  classifyAugmentStage as classifyStage,
+  ensureMayhemMetaLoaded,
+  getAugmentDisplayName,
+  getAugmentIconUrl,
+  getAugmentRarity,
+  getCachedAugmentStats,
+  rarityIcon,
+} from '@/lib/aramgg-meta'
 
 export interface MayhemAugmentLookupModalProps {
   open: boolean
@@ -40,72 +46,6 @@ export interface MayhemAugmentLookupModalProps {
 }
 
 type Tab = 'byChampion' | 'byAugment'
-
-// ==================== 全量元数据缓存(整个会话只拉一次) ====================
-
-let cachedAugmentMeta: AramggMayhemAugments | null = null
-let cachedAugmentStats: AramggAugmentStatsEntry[] | null = null
-let metaLoadingPromise: Promise<void> | null = null
-
-async function ensureMetaLoaded() {
-  if (cachedAugmentMeta && cachedAugmentStats) return
-  if (metaLoadingPromise) return metaLoadingPromise
-  metaLoadingPromise = (async () => {
-    try {
-      const [meta, stats] = await Promise.all([
-        aramggApi.getMayhemAugmentsZhCn(),
-        aramggApi.getAugmentsStats(),
-      ])
-      cachedAugmentMeta = meta
-      cachedAugmentStats = stats
-    } catch (err) {
-      logger.warn('[Mayhem Lookup] 元数据加载失败:', err)
-      throw err
-    } finally {
-      metaLoadingPromise = null
-    }
-  })()
-  return metaLoadingPromise
-}
-
-// ==================== 工具 ====================
-
-const STAGE_BUCKETS = [
-  { key: 'early', label: '前期 (P1-2)', min: 0, max: 1.7 },
-  { key: 'mid', label: '中期 (P2-3)', min: 1.7, max: 2.7 },
-  { key: 'late', label: '后期 (P3-4)', min: 2.7, max: 4 },
-] as const
-
-function rarityIcon(rarity: number): string {
-  return rarity >= 3 ? '🔱' : rarity >= 2 ? '⭐' : '◽'
-}
-
-function classifyStage(averageIndex: number): typeof STAGE_BUCKETS[number]['key'] {
-  for (const b of STAGE_BUCKETS) {
-    if (averageIndex >= b.min && averageIndex < b.max) return b.key
-  }
-  return 'late'
-}
-
-function getAugmentDisplayName(id: string | number): string {
-  const idNum = typeof id === 'number' ? id : parseInt(id, 10)
-  return getAugmentInfo(idNum)?.name
-    || cachedAugmentMeta?.[String(id)]?.displayName
-    || `#${id}`
-}
-
-function getAugmentRarity(id: string | number): number {
-  return cachedAugmentMeta?.[String(id)]?.rarity ?? 0
-}
-
-function getAugmentIconUrl(id: string | number): string {
-  const idNum = typeof id === 'number' ? id : parseInt(id, 10)
-  const lcuIcon = getAugmentInfo(idNum)?.iconPath
-  if (lcuIcon) return lcuIcon
-  const small = cachedAugmentMeta?.[String(id)]?.iconSmall
-  if (small) return small.startsWith('http') ? small : `https://aramgg.com${small}`
-  return ''
-}
 
 // ==================== 主组件 ====================
 
@@ -117,7 +57,7 @@ export function MayhemAugmentLookupModal({ open, onClose, defaultChampionId }: M
   useEffect(() => {
     if (!open) return
     setMetaError('')
-    ensureMetaLoaded()
+    ensureMayhemMetaLoaded()
       .then(() => setMetaReady(true))
       .catch((err) => setMetaError(`元数据加载失败:${err instanceof Error ? err.message : String(err)}`))
   }, [open])
@@ -418,8 +358,9 @@ function ByAugmentPanel() {
 
   // 全 augment 列表(下拉)
   const augmentOptions = useMemo(() => {
-    if (!cachedAugmentStats) return []
-    return cachedAugmentStats
+    const stats = getCachedAugmentStats()
+    if (!stats) return []
+    return stats
       .filter((entry) => parseInt(entry.stats.num_games, 10) >= 200)
       .map((entry) => ({
         id: String(entry.augmentId),
@@ -438,8 +379,9 @@ function ByAugmentPanel() {
 
   const selected = augmentOptions.find((a) => a.id === augmentId)
   const stats = useMemo(() => {
-    if (!augmentId || !cachedAugmentStats) return null
-    return cachedAugmentStats.find((e) => String(e.augmentId) === augmentId) ?? null
+    const allStats = getCachedAugmentStats()
+    if (!augmentId || !allStats) return null
+    return allStats.find((e) => String(e.augmentId) === augmentId) ?? null
   }, [augmentId])
 
   return (

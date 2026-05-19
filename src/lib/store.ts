@@ -41,6 +41,8 @@ export interface SonaConfig {
   aramSmartLoadout: boolean
   /** 海克斯大乱斗 augment 速查：选好英雄后把 ARAMGG Top 5 augment 推到聊天框 + 桌面通知 */
   mayhemAugmentTip: boolean
+  /** 海克斯大乱斗常驻面板：进入选人界面后在右侧浮动显示当前英雄的 augment + 核心装备推荐 */
+  mayhemAugmentPanel: boolean
   /** 侧边栏收缩状态 */
   sidebarCollapsed: boolean
   /** 在线状态 */
@@ -157,6 +159,7 @@ const DEFAULT_CONFIG: SonaConfig = {
   benchNoCooldown: false,
   aramSmartLoadout: false,
   mayhemAugmentTip: false,
+  mayhemAugmentPanel: true,
   sidebarCollapsed: false,
   availability: 'chat',
   statusMessage: {},

@@ -29,6 +29,7 @@ import { updateAutoReturnToLobby } from '@/lib/features/auto-return-to-lobby'
 import { updateOpggBuildRecommendation } from '@/lib/features/opgg-build-recommendation'
 import { preloadChampSelectTierBadgeData, updateChampSelectTierBadge } from '@/lib/features/champselect-tier-badge'
 import { updateAramSmartLoadout } from '@/lib/features/aram-smart-loadout'
+import { updateMayhemAugmentPanel } from '@/lib/features/champselect-mayhem-panel'
 import { setAvailabilityHijackEnabled, setHideTFTEnabled, setHideRightNavTextEnabled } from '@/lib/injections'
 
 // ==================== 共享：查询队友胜率 ====================
@@ -769,6 +770,9 @@ export function initFeatures() {
 
   updateBalanceBuffTooltip(store.get('balanceBuffTooltip'))
   store.onChange('balanceBuffTooltip', updateBalanceBuffTooltip)
+
+  updateMayhemAugmentPanel(store.get('mayhemAugmentPanel'))
+  store.onChange('mayhemAugmentPanel', updateMayhemAugmentPanel)
 
   updateChampSelectQuitButton(store.get('champSelectQuitButton'))
   store.onChange('champSelectQuitButton', updateChampSelectQuitButton)

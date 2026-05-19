@@ -110,6 +110,7 @@ export function ToolsPage() {
   const [benchNoCooldown, setBenchNoCooldown] = useState(store.get('benchNoCooldown'))
   const [aramSmartLoadout, setAramSmartLoadout] = useState(store.get('aramSmartLoadout'))
   const [mayhemAugmentTip, setMayhemAugmentTip] = useState(store.get('mayhemAugmentTip'))
+  const [mayhemAugmentPanel, setMayhemAugmentPanel] = useState(store.get('mayhemAugmentPanel'))
   const [hideTFT, setHideTFT] = useState(store.get('hideTFT'))
   const [hideRightNavText, setHideRightNavText] = useState(store.get('hideRightNavText'))
   const [windowEffect, setWindowEffect] = useState(store.get('windowEffect'))
@@ -170,6 +171,7 @@ export function ToolsPage() {
       store.onChange('benchNoCooldown', setBenchNoCooldown),
       store.onChange('aramSmartLoadout', setAramSmartLoadout),
       store.onChange('mayhemAugmentTip', setMayhemAugmentTip),
+      store.onChange('mayhemAugmentPanel', setMayhemAugmentPanel),
       store.onChange('hideTFT', setHideTFT),
       store.onChange('windowEffect', setWindowEffect),
       store.onChange('champSelectAssist', setChampSelectAssist),
@@ -343,6 +345,15 @@ export function ToolsPage() {
           <SonaSwitch
             checked={mayhemAugmentTip}
             onChange={(v) => { setMayhemAugmentTip(v); store.set('mayhemAugmentTip', v) }}
+          />
+        </SettingCard>
+        <SettingCard
+          title="海克斯大乱斗常驻面板"
+          description="进入海斗选人界面后，在屏幕右侧浮窗显示当前英雄的 augment 推荐 + 核心装备（按选号阶段分组）。锁定/换英雄会自动刷新。"
+        >
+          <SonaSwitch
+            checked={mayhemAugmentPanel}
+            onChange={(v) => { setMayhemAugmentPanel(v); store.set('mayhemAugmentPanel', v) }}
           />
         </SettingCard>
         <SettingCard
