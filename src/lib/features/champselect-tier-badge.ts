@@ -10,6 +10,7 @@ import { injector } from '@/lib/InjectorManager'
 import { getQueue } from '@/lib/assets'
 import { lcu, LcuEventUri, type ChampSelectSession, type LCUEventMessage } from '@/lib/lcu'
 import { opggApi, type OpggChampionsTier, type OpggMode, type OpggRankedDataItem, type OpggTier } from '@/lib/opgg-api'
+import { aramggApi } from '@/lib/aramgg-api'
 import { store } from '@/lib/store'
 import type { GameflowPhase } from '@/types/lcu'
 
@@ -69,6 +70,13 @@ const TIER_LABEL_MAP = new Map<number, string>([
 ])
 const PRELOAD_MODES: OpggMode[] = ['ranked', 'aram', 'arena', 'urf', 'nexus_blitz']
 
+/**
+ * 海克斯大乱斗（KIWI / queueId 3100）专用数据源标记。
+ * OP.GG 不收录海克斯大乱斗，因此走 ARAMGG。
+ */
+const ARAMGG_MAYHEM_SOURCE = 'aramgg-mayhem' as const
+type TierDataSource = OpggMode | typeof ARAMGG_MAYHEM_SOURCE
+
 interface TierCacheEntry {
   data?: Map<number, ChampionTierStats>
   promise?: Promise<Map<number, ChampionTierStats>>
@@ -92,21 +100,30 @@ function normalizeOpggTier(value: string): OpggTier {
   return SELECTABLE_OPGG_TIERS.includes(value as OpggTier) ? value as OpggTier : DEFAULT_OPGG_TIER
 }
 
-function resolveOpggMode(gameMode: string): OpggMode {
+/**
+ * 把客户端 gameMode 字符串映射成数据源。
+ *
+ * 关键修正：海克斯大乱斗（KIWI, queueId 3100）单独走 ARAMGG，
+ * 不再 fallback 到 OP.GG 的 'aram'——augment 系统让英雄强度排序与普通大乱斗完全不同。
+ */
+function resolveTierSource(gameMode: string): TierDataSource {
   const mode = gameMode.toLowerCase()
-  if (mode === 'aram' || mode === 'kiwi') return 'aram'
+  if (mode === 'kiwi') return ARAMGG_MAYHEM_SOURCE
+  if (mode === 'aram') return 'aram'
   if (mode === 'cherry' || mode === 'arena') return 'arena'
   if (mode === 'nexusblitz' || mode === 'nexus_blitz') return 'nexus_blitz'
   if (mode === 'urf' || mode === 'arurf') return 'urf'
   return 'ranked'
 }
 
-function getEffectiveTier(mode: OpggMode): OpggTier {
-  return mode === 'arena' ? 'all' : normalizeOpggTier(store.get('opggBuildRecommendationTier'))
+function getEffectiveTier(source: TierDataSource): OpggTier {
+  // ARAMGG 没有段位筛选概念，固定用 'all' 占位（仅用于 cache key）
+  if (source === ARAMGG_MAYHEM_SOURCE) return 'all'
+  return source === 'arena' ? 'all' : normalizeOpggTier(store.get('opggBuildRecommendationTier'))
 }
 
-function getTierCacheKey(mode: OpggMode, tier: OpggTier): string {
-  return `${mode}|${tier}`
+function getTierCacheKey(source: TierDataSource, tier: OpggTier): string {
+  return source === ARAMGG_MAYHEM_SOURCE ? ARAMGG_MAYHEM_SOURCE : `${source}|${tier}`
 }
 
 function getBestRankedStats(champion: OpggRankedDataItem): ChampionTierStats {
@@ -164,25 +181,46 @@ function buildTierMap(data: OpggChampionsTier, mode: OpggMode): Map<number, Cham
   return result
 }
 
-function ensureTierMap(mode: OpggMode, tier = getEffectiveTier(mode)): Promise<Map<number, ChampionTierStats>> {
-  const cacheKey = getTierCacheKey(mode, tier)
+/**
+ * ARAMGG tier list → ChampionTierStats Map
+ * ARAMGG 已经返回 1-5 的 tier 数字，与 OP.GG 编号一致；胜率从百分数转 0-1 小数。
+ */
+async function loadAramggMayhemTierMap(): Promise<Map<number, ChampionTierStats>> {
+  const list = await aramggApi.getMayhemTierList()
+  const result = new Map<number, ChampionTierStats>()
+  for (const entry of list) {
+    result.set(entry.championId, {
+      tier: entry.tier,
+      // 与 OP.GG 一致的 0-1 表示
+      winRate: entry.winRate / 100,
+    })
+  }
+  return result
+}
+
+function ensureTierMap(source: TierDataSource, tier = getEffectiveTier(source)): Promise<Map<number, ChampionTierStats>> {
+  const cacheKey = getTierCacheKey(source, tier)
   const cached = tierCache.get(cacheKey)
   if (cached?.data) return Promise.resolve(cached.data)
   if (cached?.promise) return cached.promise
 
   const entry: TierCacheEntry = {}
-  entry.promise = opggApi.getChampionsTier({ region: 'global', mode, tier })
-    .then((data) => {
-      const tierMap = buildTierMap(data, mode)
+
+  const fetcher: Promise<Map<number, ChampionTierStats>> = source === ARAMGG_MAYHEM_SOURCE
+    ? loadAramggMayhemTierMap()
+    : opggApi.getChampionsTier({ region: 'global', mode: source, tier }).then((data) => buildTierMap(data, source))
+
+  entry.promise = fetcher
+    .then((tierMap) => {
       entry.data = tierMap
       entry.promise = undefined
-      logger.info('[ChampTier] 已缓存 OP.GG 英雄 T 级 → mode=%s, tier=%s, count=%d', mode, tier, tierMap.size)
+      logger.info('[ChampTier] 已缓存英雄 T 级 → source=%s, tier=%s, count=%d', source, tier, tierMap.size)
       return tierMap
     })
     .catch((err) => {
       entry.promise = undefined
       tierCache.delete(cacheKey)
-      logger.warn('[ChampTier] OP.GG 英雄 T 级预加载失败 → mode=%s, tier=%s:', mode, tier, err)
+      logger.warn('[ChampTier] 英雄 T 级预加载失败 → source=%s, tier=%s:', source, tier, err)
       throw err
     })
 
@@ -194,33 +232,36 @@ export function preloadChampSelectTierBadgeData() {
   const selectedTier = normalizeOpggTier(store.get('opggBuildRecommendationTier'))
   logger.info('[ChampTier] 开始预加载全模式英雄 T 级数据 → tier=%s', selectedTier)
 
+  // OP.GG 模式
   PRELOAD_MODES.forEach((mode) => {
     const tier = mode === 'arena' ? 'all' : selectedTier
     void ensureTierMap(mode, tier).catch(() => { /* logged in ensureTierMap */ })
   })
+  // ARAMGG（海克斯大乱斗）— 无段位维度，单独预加载
+  void ensureTierMap(ARAMGG_MAYHEM_SOURCE).catch(() => { /* logged in ensureTierMap */ })
 }
 
-async function resolveCurrentContext(session?: ChampSelectSession): Promise<{ mode: OpggMode; gameMode: string; queueId: number }> {
+async function resolveCurrentContext(session?: ChampSelectSession): Promise<{ source: TierDataSource; gameMode: string; queueId: number }> {
   const currentSession = session ?? await lcu.getChampSelectSession().catch(() => null)
   const queueId = currentSession?.queueId ?? 0
   const queueMode = queueId > 0 ? getQueue(queueId)?.gameMode : ''
 
   if (queueMode) {
-    return { mode: resolveOpggMode(queueMode), gameMode: queueMode, queueId }
+    return { source: resolveTierSource(queueMode), gameMode: queueMode, queueId }
   }
 
   const gameflow = await lcu.getGameflowSession().catch(() => null)
   const gameMode = gameflow?.gameData?.queue?.gameMode || gameflow?.map?.gameMode || ''
-  return { mode: resolveOpggMode(gameMode), gameMode, queueId: queueId || gameflow?.gameData?.queue?.id || 0 }
+  return { source: resolveTierSource(gameMode), gameMode, queueId: queueId || gameflow?.gameData?.queue?.id || 0 }
 }
 
 async function loadTierData(session?: ChampSelectSession) {
   const token = ++loadToken
   const activeSession = session ?? await lcu.getChampSelectSession().catch(() => null)
   currentSession = activeSession
-  const { mode, gameMode, queueId } = await resolveCurrentContext(activeSession ?? undefined)
-  const tier = getEffectiveTier(mode)
-  const cacheKey = getTierCacheKey(mode, tier)
+  const { source, gameMode, queueId } = await resolveCurrentContext(activeSession ?? undefined)
+  const tier = getEffectiveTier(source)
+  const cacheKey = getTierCacheKey(source, tier)
 
   if (cacheKey === currentCacheKey && tierByChampionId.size > 0) {
     tryInjectTierBadges()
@@ -228,10 +269,10 @@ async function loadTierData(session?: ChampSelectSession) {
   }
 
   currentCacheKey = cacheKey
-  logger.info('[ChampTier] 读取英雄 T 级缓存 → mode=%s, tier=%s, gameMode=%s, queueId=%d', mode, tier, gameMode || 'unknown', queueId)
+  logger.info('[ChampTier] 读取英雄 T 级缓存 → source=%s, tier=%s, gameMode=%s, queueId=%d', source, tier, gameMode || 'unknown', queueId)
 
   try {
-    const tierMap = await ensureTierMap(mode, tier)
+    const tierMap = await ensureTierMap(source, tier)
     if (token !== loadToken) return
 
     tierByChampionId = tierMap

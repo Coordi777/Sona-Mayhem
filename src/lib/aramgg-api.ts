@@ -110,6 +110,23 @@ export interface AramggChampionRecommendation {
   items: Record<string, AramggChampionStatEntry>
 }
 
+/**
+ * 海克斯大乱斗 tier list 单行数据。
+ * 数据源：aramgg.com 首页的 HTML 表格，包含全英雄的层级 / 胜率 / 选取率 / 推荐 augment。
+ */
+export interface AramggMayhemTierEntry {
+  /** 英雄 ID（与 LCU championId 一致） */
+  championId: number
+  /** 排名（1-based，按胜率综合算分排序） */
+  rank: number
+  /** 层级数字 1-5（T1 最强，T5 最弱），与 OP.GG tier 编号约定一致 */
+  tier: number
+  /** 胜率百分比，例如 57.84 */
+  winRate: number
+  /** 选取率百分比，例如 0.75 */
+  pickRate: number
+}
+
 export class AramggApiError extends Error {
   readonly url: string
   readonly status?: number
@@ -454,6 +471,67 @@ function collectEscapedCoreItemBuildArrays(rscText: string, target: AramggChampi
   }
 }
 
+/**
+ * 从 aramgg.com 首页 HTML 中解析海克斯大乱斗 tier list。
+ *
+ * HTML 结构（每个英雄一行）：
+ *   <tr data-slot="table-row" ...>
+ *     <td>...<span class="rank-gold|rank-silver|rank-bronze|...">{rank}</span>...</td>
+ *     <td>...<a href="/zh-CN/champion-stats/{id}">姓名</a>...</td>
+ *     <td>...>T<!-- -->{1-5}</span>...</td>
+ *     <td>...{winRate}%...</td>
+ *     <td>...{pickRate}%...</td>
+ *     <td>...推荐 augment 图标...</td>
+ *   </tr>
+ *
+ * 解析采用宽松正则（不依赖具体 className），对 ARAMGG 后续小幅样式重构有一定容忍度。
+ */
+export function parseMayhemTierList(html: string): AramggMayhemTierEntry[] {
+  // 提取所有非表头的 table-row（含 td，而表头是 th）
+  const rowRegex = /<tr\b[^>]*data-slot="table-row"[^>]*>([\s\S]*?)<\/tr>/g
+  const entries: AramggMayhemTierEntry[] = []
+  let rowMatch: RegExpExecArray | null
+
+  while ((rowMatch = rowRegex.exec(html)) !== null) {
+    const rowHtml = rowMatch[1]
+    if (rowHtml.includes('<th ')) continue // 跳过表头
+
+    // championId
+    const idMatch = rowHtml.match(/href="\/[^"]*\/champion-stats\/(\d+)"/)
+    if (!idMatch) continue
+    const championId = Number(idMatch[1])
+    if (!Number.isFinite(championId)) continue
+
+    // tier — 形如 ">T<!-- -->1" 或 ">T1<"
+    const tierMatch = rowHtml.match(/>T(?:<!--\s*-->|\s*)(\d)\b/)
+    if (!tierMatch) continue
+    const tier = Number(tierMatch[1])
+    if (!Number.isFinite(tier) || tier < 1 || tier > 5) continue
+
+    // winRate — stat-value 类的第一个百分比
+    const winRateMatch = rowHtml.match(/class="[^"]*stat-value[^"]*"[^>]*>([\d.]+)%/)
+    const winRate = winRateMatch ? Number(winRateMatch[1]) : Number.NaN
+
+    // pickRate — 选取率列（不含 stat-value 类的下一个百分比）
+    const pickRateMatch = rowHtml.match(/text-muted-foreground[^"]*"[^>]*>\s*([\d.]+)%/)
+    const pickRate = pickRateMatch ? Number(pickRateMatch[1]) : Number.NaN
+
+    // rank — 第一个 td 内的数字
+    const rankMatch = rowHtml.match(/class="text-sm font-bold[^"]*"[^>]*>(\d+)</)
+    const rank = rankMatch ? Number(rankMatch[1]) : entries.length + 1
+
+    entries.push({
+      championId,
+      rank,
+      tier,
+      winRate: Number.isFinite(winRate) ? winRate : 0,
+      pickRate: Number.isFinite(pickRate) ? pickRate : 0,
+    })
+  }
+
+  return entries
+}
+
 export function parseAramggChampionRecommendation(text: string, championId?: number): AramggChampionRecommendation {
   const fixedText = normalizeRscInput(fixUtf8Mojibake(text))
   const result: AramggChampionRecommendation = {
@@ -536,6 +614,18 @@ export class AramggDataApi {
       String(parsed.championStats != null),
     )
 
+    return parsed
+  }
+
+  /**
+   * 拉取海克斯大乱斗全英雄 tier list。
+   * 数据源：aramgg.com 首页（zh-CN）HTML 表格直接解析。
+   * 返回每个英雄的 tier (1-5) / 胜率 / 选取率 / 排名。
+   */
+  async getMayhemTierList(options: AramggRequestOptions = {}): Promise<AramggMayhemTierEntry[]> {
+    const text = await this.requestText('/zh-CN', options)
+    const parsed = parseMayhemTierList(text)
+    logger.info('[ARAMGG] tier list 已加载 → %d 个英雄', parsed.length)
     return parsed
   }
 
