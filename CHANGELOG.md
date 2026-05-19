@@ -6,6 +6,40 @@
 
 ---
 
+## [1.4.0-mayhem.2] - 2026-05-19
+
+### 🐛 重要 Bug 修复 — 海斗模式数据准确性
+
+- **海斗 T 级角标修正** — 之前所有海斗模式英雄的 T 级角标显示的都是 OP.GG **普通极地大乱斗**的数据（OP.GG 不收录海斗），导致英雄强度排序与玩家实际感知严重不符。改为从 [aramgg.com](https://aramgg.com) 首页 HTML 表格直接抓取真海斗 tier list（172 英雄完整覆盖），按 T1-T5 五档精准映射到现有 SVG 图标。
+- **海斗模式不再尝试应用符文** — 海斗游戏内**没有符文系统**，augment 完全替代了 rune。之前给 KIWI 模式调用 `applyRunePage()` 是无效操作（即使 LCU 接受调用，游戏也不会读取），白白浪费 API 调用 + 客户端被塞满 `[Sona] xxx 大乱斗` 的废符文页。现在海斗模式直接跳过符文应用。
+
+### ✨ 新增
+
+- **海斗选人界面常驻面板** — 进入海斗 BP 阶段后，在屏幕右侧浮动显示当前英雄的 augment 推荐 + 核心装备：
+  - 按"前/中/后期 (P1-2 / P2-3 / P3-4)"分阶段展示，紧凑卡片布局
+  - 每个 augment 显示稀有度图标 + 中文名 + 胜率 + 出场率
+  - 核心装备 Top3 完整出装路径（带物品图标）
+  - 锁定/换英雄/reroll 实时刷新；离开 ChampSelect 自动消失
+  - 与速查弹窗共享 ARAMGG 元数据缓存，零额外网络开销
+  - 工具页新增开关「海克斯大乱斗常驻面板」(默认开启)
+- **召唤师技能按英雄推荐（仅海斗）** — 海斗模式锁定英雄后，从 OPGG ARAM 的 `summoner_spells` 字段按胜率挑选最佳组合，而非无脑 Flash + Snowball。数据缺失时 fallback 到默认。**普通 ARAM 仍保留玩家手选的 spell 偏好**，避免覆盖 Heal/Cleanse/Mark/Ghost 等场景。
+
+### 🔧 内部改造
+
+- **`TierDataSource` 类型** — 引入 `OpggMode | 'aramgg-mayhem'` 联合类型，`ensureTierMap` 按数据源分流（OPGG / ARAMGG）
+- **`parseMayhemTierList`** — ARAMGG 首页 HTML 表格解析器，宽容正则对 ARAMGG 后续小幅样式重构有抗性
+- **`src/lib/aramgg-meta.ts`** — 新增共享模块：augment 元数据缓存 + 工具函数（rarity 映射、stage 分桶、name/icon 解析），由速查弹窗与常驻面板共用
+- **`<MayhemAugmentPanel>`** — 新增可复用展示组件，自包含数据请求与三态管理，支持 compact 模式
+- **模式分流彻底干净** — `applyAramLoadout` 中 ARAM/KIWI 走完全不同的分支，互不污染：
+  ```
+                    | ARAM (450)  | KIWI (3100) |
+  自动应用 OPGG 符文  |    ✓        |    ✗        |
+  自动换召唤师技能    |    ✗        |    ✓        |
+  augment 推送/面板   |    -        |    ✓        |
+  ```
+
+---
+
 ## [1.4.0-mayhem.1] - 2026-05-15
 
 ### 🍴 Fork 起点
