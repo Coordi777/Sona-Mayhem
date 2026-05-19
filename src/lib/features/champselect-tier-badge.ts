@@ -93,6 +93,7 @@ let injectRegistered = false
 let tierByChampionId = new Map<number, ChampionTierStats>()
 let currentSession: ChampSelectSession | null = null
 let currentCacheKey = ''
+let currentSource: TierDataSource | null = null
 let loadToken = 0
 const tierCache = new Map<string, TierCacheEntry>()
 
@@ -269,6 +270,7 @@ async function loadTierData(session?: ChampSelectSession) {
   }
 
   currentCacheKey = cacheKey
+  currentSource = source
   logger.info('[ChampTier] 读取英雄 T 级缓存 → source=%s, tier=%s, gameMode=%s, queueId=%d', source, tier, gameMode || 'unknown', queueId)
 
   try {
@@ -399,6 +401,18 @@ function getOwnWinRateText(element: HTMLElement): HTMLSpanElement | null {
   }) ?? null
 }
 
+/**
+ * 决定当前 target 是否要显示胜率文字。
+ *
+ * 默认遵循 BADGE_TARGETS 里的 showWinRate 配置（仅 bench 显示，主网格不显示，避免信息过密）。
+ * 但**海斗模式**例外——海斗的胜率是核心选英雄依据（augment 系统让英雄强度排序剧烈洗牌），
+ * 所有 target 都强制显示胜率，方便玩家挑英雄。
+ */
+function effectiveShowWinRate(staticShowWinRate: boolean): boolean {
+  if (staticShowWinRate) return true
+  return currentSource === ARAMGG_MAYHEM_SOURCE
+}
+
 function tryInjectTierBadges(): boolean {
   if (tierByChampionId.size === 0) return true
 
@@ -414,7 +428,8 @@ function tryInjectTierBadges(): boolean {
     const tier = stats?.tier
     const winRate = stats?.winRate
     const existing = getOwnBadge(element)
-    const winRateHost = getWinRateHost(element, targetConfig.showWinRate)
+    const showWinRate = effectiveShowWinRate(targetConfig.showWinRate)
+    const winRateHost = getWinRateHost(element, showWinRate)
     const existingWinRate = getOwnWinRateText(winRateHost)
 
     if (!stats) {
@@ -437,7 +452,7 @@ function tryInjectTierBadges(): boolean {
       }
     }
 
-    if (targetConfig.showWinRate && winRate != null) {
+    if (showWinRate && winRate != null) {
       const nextText = `${normalizeWinRateForDisplay(winRate).toFixed(1)}%`
       if (existingWinRate?.textContent !== nextText) {
         existingWinRate?.remove()
@@ -511,6 +526,7 @@ function mount(session?: ChampSelectSession) {
   tierByChampionId = new Map()
   currentSession = session ?? null
   currentCacheKey = ''
+  currentSource = null
 
   if (!injectRegistered) {
     injector.register(tryInjectTierBadges)
@@ -523,6 +539,7 @@ function mount(session?: ChampSelectSession) {
 function unmount() {
   loadToken++
   currentCacheKey = ''
+  currentSource = null
   tierByChampionId = new Map()
   currentSession = null
 
