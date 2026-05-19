@@ -1,7 +1,7 @@
 {
   "name": "sona-mayhem",
   "private": true,
-  "version": "1.4.0-mayhem.2",
+  "version": "1.4.0-mayhem.3",
   "type": "module",
   "description": "Sona-Mayhem — A fork of Sona (WJZ-P/sona) with enhanced features tailored for Hexgates Mayhem (海克斯大乱斗) players.",
   "license": "AGPL-3.0",
