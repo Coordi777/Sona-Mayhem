@@ -26,6 +26,7 @@ import type {
 import { store } from '@/lib/store'
 import { opggApi } from '@/lib/opgg-api'
 import type {
+  OpggItemBuild,
   OpggNormalChampionData,
   OpggNormalModeChampion,
   OpggRuneBuild,
@@ -212,7 +213,38 @@ function formatItemBuildPath(itemIdsStr: string): string {
 // ==================== Action: 自动符文 + 召唤师技能 ====================
 
 /**
+ * 从 OPGG ARAM 的 summoner_spells 数据中挑出「胜率最高且样本充足」的组合。
+ *
+ * 数据形态：每个 OpggItemBuild 的 ids = [spell1Id, spell2Id]，play 是样本量，win 是胜利数。
+ * 选择策略：要求 ≥ MIN_GAMES 局，再按胜率降序；不够 MIN_GAMES 的话降到 ≥ FALLBACK_MIN_GAMES。
+ *
+ * @returns 推荐的 [spell1Id, spell2Id]；数据缺失时返回 null（调用方应 fallback 到默认）
+ */
+function pickBestSummonerSpells(builds: OpggItemBuild[] | undefined): [number, number] | null {
+  if (!builds || builds.length === 0) return null
+  const MIN_GAMES = 200
+  const FALLBACK_MIN_GAMES = 50
+
+  const valid = builds
+    .filter((b) => Array.isArray(b.ids) && b.ids.length === 2 && b.play > 0
+      && b.ids[0] > 0 && b.ids[1] > 0 && b.ids[0] !== b.ids[1])
+    .map((b) => ({ ids: b.ids as [number, number], winRate: b.win / b.play, play: b.play }))
+
+  if (valid.length === 0) return null
+
+  let pool = valid.filter((b) => b.play >= MIN_GAMES)
+  if (pool.length === 0) pool = valid.filter((b) => b.play >= FALLBACK_MIN_GAMES)
+  if (pool.length === 0) pool = valid
+
+  pool.sort((a, b) => b.winRate - a.winRate || b.play - a.play)
+  return pool[0].ids
+}
+
+/**
  * 应用大乱斗符文 + 召唤师技能
+ *
+ * 数据驱动：召唤师技能从 OPGG ARAM `summoner_spells` 取（按英雄推荐），
+ * 而不是无脑 Flash + Snowball。OPGG 数据缺失时 fallback 到默认 Flash + Snowball。
  *
  * @param championId 已锁定的英雄
  * @param current 当前已选的 spell1/spell2
@@ -225,38 +257,8 @@ async function applyAramLoadout(
   let runesApplied = false
   let spellsApplied = false
 
-  // ① 召唤师技能：闪现 + 雪球
-  const wantSpells = new Set([SUMMONER_SPELL_FLASH, SUMMONER_SPELL_SNOWBALL])
-  const haveSpells = new Set([current.spell1Id, current.spell2Id])
-  const allMatch = haveSpells.size === wantSpells.size &&
-    [...wantSpells].every((s) => haveSpells.has(s))
-
-  if (!allMatch) {
-    try {
-      await lcu.updateMySelection({
-        spell1Id: SUMMONER_SPELL_FLASH,
-        spell2Id: SUMMONER_SPELL_SNOWBALL,
-      })
-      spellsApplied = true
-      logger.info('[ARAM Loadout] 已自动设置召唤师技能 → 闪现 + 雪球')
-    } catch (err) {
-      logger.warn('[ARAM Loadout] 自动设置召唤师技能失败:', err)
-    }
-  }
-
-  // ② 检查智能配装是否已记忆该英雄的偏好（共存策略）
-  const runeKey = `${championId}_aram`
-  const savedRunes = store.get('smartRunePages')[runeKey]
-  if (
-    savedRunes &&
-    store.get('smartBuildRecommendation') &&
-    savedRunes.selectedPerkIds.length >= 8
-  ) {
-    logger.info('[ARAM Loadout] 检测到智能配装记忆 (key=%s)，跳过自动符文写入', runeKey)
-    return { runesApplied, spellsApplied }
-  }
-
-  // ③ 拉 OPGG ARAM 推荐符文
+  // ① 拉 OPGG ARAM 数据（一次拉取，符文 + 召唤师技能复用）
+  let data: OpggNormalChampionData | undefined
   try {
     const version = await lcu.getGameVersion().catch(() => '')
     const opggVersion = version.match(/^(\d+\.\d+)/)?.[1]
@@ -270,8 +272,57 @@ async function applyAramLoadout(
       position: 'none',
     }) as OpggNormalModeChampion
 
-    const data: OpggNormalChampionData | undefined = champion?.data
-    const runePages = data?.rune_pages ?? []
+    data = champion?.data
+  } catch (err) {
+    logger.warn('[ARAM Loadout] OPGG ARAM 数据拉取失败，召唤师技能将 fallback 到默认:', err)
+  }
+
+  const championName = getChampionById(championId)?.name ?? '英雄'
+
+  // ② 召唤师技能：优先 OPGG 推荐，fallback 到 Flash + Snowball
+  const recommended = pickBestSummonerSpells(data?.summoner_spells)
+  const wantSpells: [number, number] = recommended ?? [SUMMONER_SPELL_FLASH, SUMMONER_SPELL_SNOWBALL]
+
+  const wantSpellSet = new Set(wantSpells)
+  const haveSpellSet = new Set([current.spell1Id, current.spell2Id])
+  const allMatch = wantSpellSet.size === haveSpellSet.size
+    && [...wantSpellSet].every((s) => haveSpellSet.has(s))
+
+  if (!allMatch) {
+    try {
+      await lcu.updateMySelection({
+        spell1Id: wantSpells[0],
+        spell2Id: wantSpells[1],
+      })
+      spellsApplied = true
+      logger.info(
+        '[ARAM Loadout] 已自动设置召唤师技能 → %s spell1=%d spell2=%d (来源:%s)',
+        championName, wantSpells[0], wantSpells[1], recommended ? 'OPGG' : 'fallback',
+      )
+    } catch (err) {
+      logger.warn('[ARAM Loadout] 自动设置召唤师技能失败:', err)
+    }
+  }
+
+  // ③ 检查智能配装是否已记忆该英雄的偏好（共存策略）
+  const runeKey = `${championId}_aram`
+  const savedRunes = store.get('smartRunePages')[runeKey]
+  if (
+    savedRunes &&
+    store.get('smartBuildRecommendation') &&
+    savedRunes.selectedPerkIds.length >= 8
+  ) {
+    logger.info('[ARAM Loadout] 检测到智能配装记忆 (key=%s)，跳过自动符文写入', runeKey)
+    return { runesApplied, spellsApplied }
+  }
+
+  // ④ 应用 OPGG ARAM 推荐符文（复用上面已拉的 data）
+  if (!data) {
+    return { runesApplied, spellsApplied }
+  }
+
+  try {
+    const runePages = data.rune_pages ?? []
     // 选胜率最高的 rune_page 的 builds[0]
     const bestPage = [...runePages].sort((a, b) => {
       const wrA = a.play > 0 ? a.win / a.play : 0
@@ -281,7 +332,6 @@ async function applyAramLoadout(
     const bestBuild: OpggRuneBuild | undefined = bestPage?.builds?.[0]
 
     if (bestBuild) {
-      const championName = getChampionById(championId)?.name ?? '英雄'
       await lcu.applyRunePage({
         name: `[Sona] ${championName} 大乱斗`,
         primaryStyleId: bestBuild.primary_page_id,
@@ -301,7 +351,7 @@ async function applyAramLoadout(
       logger.warn('[ARAM Loadout] OPGG ARAM 数据无 rune_pages，跳过符文应用')
     }
   } catch (err) {
-    logger.warn('[ARAM Loadout] 拉 OPGG ARAM 数据失败:', err)
+    logger.warn('[ARAM Loadout] 应用符文失败:', err)
   }
 
   return { runesApplied, spellsApplied }
