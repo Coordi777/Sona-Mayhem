@@ -331,7 +331,7 @@ export function ToolsPage() {
         </SettingCard>
         <SettingCard
           title="大乱斗智能配装"
-          description="ARAM / 海克斯大乱斗中确定英雄后，自动应用 OPGG 推荐符文。召唤师技能仅在海斗模式下自动按英雄换（普通 ARAM 保留你的偏好）。已记忆智能配装的英雄会跳过。"
+          description="ARAM (450) 锁定英雄后自动应用 OPGG 推荐符文，不动召唤师技能。海斗 KIWI (3100) 锁定英雄后自动按英雄换召唤师技能（海斗游戏内无符文系统，跳过符文应用）。已记忆智能配装的英雄会跳过符文写入。"
         >
           <SonaSwitch
             checked={aramSmartLoadout}

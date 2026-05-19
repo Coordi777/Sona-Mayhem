@@ -8,10 +8,10 @@
  * 触发时机：进入 ChampSelect 且本人英雄锁定后，每局只跑一次。
  *
  * 三件事（按用户开关分别启用）：
- *   1. aramSmartLoadout:
- *      - 符文 (ARAM + KIWI):     OPGG ARAM 数据胜率最高的 rune_pages
- *      - 召唤师技能 (仅 KIWI):  OPGG ARAM `summoner_spells` 按英雄取最佳组合
- *                                普通 ARAM 不动玩家选好的 spell（可能有 Heal/Cleanse/Mark 等偏好）
+ *   1. aramSmartLoadout: 模式分流，互不干涉
+ *      - ARAM (450):  仅自动应用 OPGG 推荐符文。不动玩家选好的 spell（可能有 Heal/Cleanse/Mark 等偏好）。
+ *      - KIWI (3100): 仅自动按英雄换召唤师技能 (OPGG ARAM `summoner_spells` 取最佳组合)。
+ *                     海斗游戏内没有符文系统 (augment 替代了 rune)，因此不应用符文。
  *   2. mayhemAugmentTip: KIWI 模式下，把 ARAMGG augment Top5 推到聊天框 + 桌面通知
  *
  * 与现有 `smartBuildRecommendation` 共存策略：
@@ -246,12 +246,11 @@ function pickBestSummonerSpells(builds: OpggItemBuild[] | undefined): [number, n
 /**
  * 应用大乱斗符文 + 召唤师技能
  *
- * 召唤师技能：**仅在海斗 (KIWI / queueId 3100) 自动应用**。
- *   - 普通 ARAM 不动玩家选好的 spell（可能有 Heal/Cleanse/Mark 等偏好）
- *   - 海斗才走"按英雄从 OPGG ARAM `summoner_spells` 取胜率最高组合"的逻辑
- *   - 数据缺失时 fallback 到默认 Flash + Snowball
- *
- * 符文：ARAM 与 KIWI 都自动应用 OPGG ARAM 推荐符文。
+ * 模式分流（互不干涉，避免污染另一边的玩家偏好）：
+ *   - **普通 ARAM (450)**: 仅自动应用 OPGG 推荐符文。**不动玩家选好的 spell**（可能有 Heal/Cleanse/Mark 等偏好）。
+ *   - **海斗 KIWI (3100)**: 仅自动按英雄换召唤师技能（OPGG ARAM `summoner_spells` 取最佳组合，
+ *     缺失则 fallback 到 Flash + Snowball）。**不应用符文**——海斗游戏内没有符文系统，
+ *     augment 完全替代了 rune，应用符文是无效操作。
  *
  * @param championId 已锁定的英雄
  * @param current 当前已选的 spell1/spell2
@@ -266,7 +265,10 @@ async function applyAramLoadout(
   let runesApplied = false
   let spellsApplied = false
 
-  // ① 拉 OPGG ARAM 数据（一次拉取，符文 + 召唤师技能复用）
+  const isMayhem = isKiwi(queueId)
+  const championName = getChampionById(championId)?.name ?? '英雄'
+
+  // ① 拉 OPGG ARAM 数据（一次拉取，spell 推荐 + 符文推荐都来自这里）
   let data: OpggNormalChampionData | undefined
   try {
     const version = await lcu.getGameVersion().catch(() => '')
@@ -283,13 +285,11 @@ async function applyAramLoadout(
 
     data = champion?.data
   } catch (err) {
-    logger.warn('[ARAM Loadout] OPGG ARAM 数据拉取失败，召唤师技能将 fallback 到默认:', err)
+    logger.warn('[ARAM Loadout] OPGG ARAM 数据拉取失败:', err)
   }
 
-  const championName = getChampionById(championId)?.name ?? '英雄'
-
-  // ② 召唤师技能：仅海斗 (KIWI) 自动应用，普通 ARAM 不动
-  if (isKiwi(queueId)) {
+  // ② 海斗（KIWI）分支：只换召唤师技能，不应用符文
+  if (isMayhem) {
     const recommended = pickBestSummonerSpells(data?.summoner_spells)
     const wantSpells: [number, number] = recommended ?? [SUMMONER_SPELL_FLASH, SUMMONER_SPELL_SNOWBALL]
 
@@ -306,18 +306,20 @@ async function applyAramLoadout(
         })
         spellsApplied = true
         logger.info(
-          '[ARAM Loadout] 已自动设置召唤师技能 → %s spell1=%d spell2=%d (来源:%s)',
+          '[ARAM Loadout] 海斗已自动设置召唤师技能 → %s spell1=%d spell2=%d (来源:%s)',
           championName, wantSpells[0], wantSpells[1], recommended ? 'OPGG' : 'fallback',
         )
       } catch (err) {
-        logger.warn('[ARAM Loadout] 自动设置召唤师技能失败:', err)
+        logger.warn('[ARAM Loadout] 海斗自动设置召唤师技能失败:', err)
       }
     }
-  } else {
-    logger.debug('[ARAM Loadout] 普通 ARAM (queueId=%d)，跳过召唤师技能自动设置', queueId)
+    // 海斗游戏内无符文系统，跳过符文应用
+    logger.debug('[ARAM Loadout] 海斗模式跳过符文应用（augment 替代了 rune 系统）')
+    return { runesApplied, spellsApplied }
   }
 
-  // ③ 检查智能配装是否已记忆该英雄的偏好（共存策略）
+  // ③ 普通 ARAM 分支：只应用符文，不动 spell
+  // 检查智能配装是否已记忆该英雄的偏好（共存策略）
   const runeKey = `${championId}_aram`
   const savedRunes = store.get('smartRunePages')[runeKey]
   if (
@@ -329,7 +331,6 @@ async function applyAramLoadout(
     return { runesApplied, spellsApplied }
   }
 
-  // ④ 应用 OPGG ARAM 推荐符文（复用上面已拉的 data）
   if (!data) {
     return { runesApplied, spellsApplied }
   }
