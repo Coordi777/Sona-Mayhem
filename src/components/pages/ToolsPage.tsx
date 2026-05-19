@@ -331,7 +331,7 @@ export function ToolsPage() {
         </SettingCard>
         <SettingCard
           title="大乱斗智能配装"
-          description="ARAM / 海克斯大乱斗中确定英雄后，自动应用 OPGG 推荐符文 + 闪现/雪球。已记忆智能配装的英雄会跳过。"
+          description="ARAM / 海克斯大乱斗中确定英雄后，自动应用 OPGG 推荐符文。召唤师技能仅在海斗模式下自动按英雄换（普通 ARAM 保留你的偏好）。已记忆智能配装的英雄会跳过。"
         >
           <SonaSwitch
             checked={aramSmartLoadout}

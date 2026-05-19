@@ -8,7 +8,10 @@
  * 触发时机：进入 ChampSelect 且本人英雄锁定后，每局只跑一次。
  *
  * 三件事（按用户开关分别启用）：
- *   1. aramSmartLoadout: 自动应用召唤师技能（闪现 + 雪球） + OPGG 推荐符文
+ *   1. aramSmartLoadout:
+ *      - 符文 (ARAM + KIWI):     OPGG ARAM 数据胜率最高的 rune_pages
+ *      - 召唤师技能 (仅 KIWI):  OPGG ARAM `summoner_spells` 按英雄取最佳组合
+ *                                普通 ARAM 不动玩家选好的 spell（可能有 Heal/Cleanse/Mark 等偏好）
  *   2. mayhemAugmentTip: KIWI 模式下，把 ARAMGG augment Top5 推到聊天框 + 桌面通知
  *
  * 与现有 `smartBuildRecommendation` 共存策略：
@@ -243,16 +246,22 @@ function pickBestSummonerSpells(builds: OpggItemBuild[] | undefined): [number, n
 /**
  * 应用大乱斗符文 + 召唤师技能
  *
- * 数据驱动：召唤师技能从 OPGG ARAM `summoner_spells` 取（按英雄推荐），
- * 而不是无脑 Flash + Snowball。OPGG 数据缺失时 fallback 到默认 Flash + Snowball。
+ * 召唤师技能：**仅在海斗 (KIWI / queueId 3100) 自动应用**。
+ *   - 普通 ARAM 不动玩家选好的 spell（可能有 Heal/Cleanse/Mark 等偏好）
+ *   - 海斗才走"按英雄从 OPGG ARAM `summoner_spells` 取胜率最高组合"的逻辑
+ *   - 数据缺失时 fallback 到默认 Flash + Snowball
+ *
+ * 符文：ARAM 与 KIWI 都自动应用 OPGG ARAM 推荐符文。
  *
  * @param championId 已锁定的英雄
  * @param current 当前已选的 spell1/spell2
+ * @param queueId 当前队列 (450 = ARAM, 3100 = KIWI)
  * @returns 实际应用了几项（用于聊天提示）
  */
 async function applyAramLoadout(
   championId: number,
   current: { spell1Id: number; spell2Id: number },
+  queueId: number,
 ): Promise<{ runesApplied: boolean; spellsApplied: boolean }> {
   let runesApplied = false
   let spellsApplied = false
@@ -279,29 +288,33 @@ async function applyAramLoadout(
 
   const championName = getChampionById(championId)?.name ?? '英雄'
 
-  // ② 召唤师技能：优先 OPGG 推荐，fallback 到 Flash + Snowball
-  const recommended = pickBestSummonerSpells(data?.summoner_spells)
-  const wantSpells: [number, number] = recommended ?? [SUMMONER_SPELL_FLASH, SUMMONER_SPELL_SNOWBALL]
+  // ② 召唤师技能：仅海斗 (KIWI) 自动应用，普通 ARAM 不动
+  if (isKiwi(queueId)) {
+    const recommended = pickBestSummonerSpells(data?.summoner_spells)
+    const wantSpells: [number, number] = recommended ?? [SUMMONER_SPELL_FLASH, SUMMONER_SPELL_SNOWBALL]
 
-  const wantSpellSet = new Set(wantSpells)
-  const haveSpellSet = new Set([current.spell1Id, current.spell2Id])
-  const allMatch = wantSpellSet.size === haveSpellSet.size
-    && [...wantSpellSet].every((s) => haveSpellSet.has(s))
+    const wantSpellSet = new Set(wantSpells)
+    const haveSpellSet = new Set([current.spell1Id, current.spell2Id])
+    const allMatch = wantSpellSet.size === haveSpellSet.size
+      && [...wantSpellSet].every((s) => haveSpellSet.has(s))
 
-  if (!allMatch) {
-    try {
-      await lcu.updateMySelection({
-        spell1Id: wantSpells[0],
-        spell2Id: wantSpells[1],
-      })
-      spellsApplied = true
-      logger.info(
-        '[ARAM Loadout] 已自动设置召唤师技能 → %s spell1=%d spell2=%d (来源:%s)',
-        championName, wantSpells[0], wantSpells[1], recommended ? 'OPGG' : 'fallback',
-      )
-    } catch (err) {
-      logger.warn('[ARAM Loadout] 自动设置召唤师技能失败:', err)
+    if (!allMatch) {
+      try {
+        await lcu.updateMySelection({
+          spell1Id: wantSpells[0],
+          spell2Id: wantSpells[1],
+        })
+        spellsApplied = true
+        logger.info(
+          '[ARAM Loadout] 已自动设置召唤师技能 → %s spell1=%d spell2=%d (来源:%s)',
+          championName, wantSpells[0], wantSpells[1], recommended ? 'OPGG' : 'fallback',
+        )
+      } catch (err) {
+        logger.warn('[ARAM Loadout] 自动设置召唤师技能失败:', err)
+      }
     }
+  } else {
+    logger.debug('[ARAM Loadout] 普通 ARAM (queueId=%d)，跳过召唤师技能自动设置', queueId)
   }
 
   // ③ 检查智能配装是否已记忆该英雄的偏好（共存策略）
@@ -468,7 +481,7 @@ async function handleSession(session: ChampSelectSession): Promise<void> {
     applyAramLoadout(local.championId, {
       spell1Id: local.spell1Id,
       spell2Id: local.spell2Id,
-    }).then((result) => {
+    }, queueId).then((result) => {
       if (result.runesApplied || result.spellsApplied) {
         const championName = getChampionById(local.championId)?.name ?? '英雄'
         const restored = result.runesApplied && result.spellsApplied
