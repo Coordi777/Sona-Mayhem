@@ -401,9 +401,33 @@ export function isAssetsReady(): boolean {
   return initialized
 }
 
-/** 获取所有英雄列表 */
+/**
+ * 判断 ChampionInfo 是否为正式可玩英雄。
+ *
+ * LCU 的 /lol-game-data/assets/v1/champion-summary.json 除了真英雄外，
+ * 还会返回一些"特殊条目"（id > 0 但不是召唤师峡谷可选英雄）：
+ *   - 末日人机 / 训练人机：alias 形如 "AnnieBot"、"BlitzcrankBot"，name 为 "末日人机"
+ *   - 大乱斗 AR 占位：description 为 "AR"
+ *   - 测试 / 内部条目：alias 含 "Test" / "Doom" 等
+ *
+ * 排除策略（保守）：
+ *   - id <= 0
+ *   - 中文名（name）包含 "人机"
+ *   - 英文 alias（不区分大小写）包含 'bot' 或 'doom'
+ *
+ * 不用 `/^[A-Za-z]+$/` 严格模式，避免误伤 JarvanIV (嘉文四世) 这类含数字的合法 alias。
+ */
+function isPlayableChampion(c: ChampionInfo): boolean {
+  if (c.id <= 0) return false
+  if (c.name?.includes('人机')) return false
+  const alias = (c.alias || '').toLowerCase()
+  if (alias.includes('bot') || alias.includes('doom')) return false
+  return true
+}
+
+/** 获取所有英雄列表（已过滤末日人机 / 训练人机等非可玩条目） */
 export function getAllChampions(): ChampionInfo[] {
-  return Array.from(championMap.values()).filter(c => c.id > 0)
+  return Array.from(championMap.values()).filter(isPlayableChampion)
 }
 
 /** 通过 ID 获取英雄信息 */
@@ -422,7 +446,7 @@ export function searchChampions(keyword: string, limit = 8): ChampionInfo[] {
   const results: ChampionInfo[] = []
 
   championMap.forEach((c) => {
-    if (c.id <= 0) return
+    if (!isPlayableChampion(c)) return
     if (
       c.name.toLowerCase().includes(kw) ||
       c.title.toLowerCase().includes(kw) ||
