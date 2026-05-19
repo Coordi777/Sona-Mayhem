@@ -356,7 +356,7 @@ function createWinRateText(winRate: number): HTMLSpanElement {
   const text = document.createElement('span')
   const displayRate = normalizeWinRateForDisplay(winRate)
   text.setAttribute(WIN_RATE_ATTR, 'true')
-  text.textContent = `${displayRate.toFixed(1)}%`
+  text.textContent = `${Math.round(displayRate)}%`
   text.style.cssText = [
     'position:absolute',
     'left:50%',
@@ -453,7 +453,7 @@ function tryInjectTierBadges(): boolean {
     }
 
     if (showWinRate && winRate != null) {
-      const nextText = `${normalizeWinRateForDisplay(winRate).toFixed(1)}%`
+      const nextText = `${Math.round(normalizeWinRateForDisplay(winRate))}%`
       if (existingWinRate?.textContent !== nextText) {
         existingWinRate?.remove()
         ensurePositionContext(winRateHost)
