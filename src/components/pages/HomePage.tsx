@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import '@/styles/HomePage.css'
 import sonaIcon from '@assets/Champie_Sona_profileicon.png'
+import { useTodayStats } from '@/lib/hooks'
+import type { ModeStats } from '@/lib/today-stats'
 
 function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -139,6 +141,9 @@ export function HomePage() {
         </p>
       </div>
 
+      {/* 今日战绩 */}
+      <TodayStatsCard />
+
       {/* 琴女语录 */}
       <p className="sona-home-quote">
         "本项目完全开源免费，如果你通过收费渠道使用，那你被骗啦!"
@@ -147,4 +152,74 @@ export function HomePage() {
       </p>
     </div>
   )
+}
+
+// ==================== 今日战绩卡片 ====================
+
+function TodayStatsCard() {
+  const { data, loading, refetch } = useTodayStats()
+
+  return (
+    <div className="sona-home-today-stats">
+      <div className="sona-home-today-stats-header">
+        <span className="sona-home-today-stats-title">📊 今日战绩</span>
+        <button
+          className="sona-home-today-stats-refresh"
+          onClick={() => { void refetch() }}
+          disabled={loading}
+          title="刷新"
+        >
+          {loading ? '加载中…' : '↻ 刷新'}
+        </button>
+      </div>
+
+      {!data || data.total === 0 ? (
+        <div className="sona-home-today-stats-empty">
+          {loading ? '加载中…' : '今天还没有对局，去打一把吧 ♫'}
+        </div>
+      ) : (
+        <>
+          <div className="sona-home-today-stats-summary">
+            <span className={`sona-home-today-stats-rate ${getRateClass(data.winRate)}`}>
+              {Math.round(data.winRate)}%
+            </span>
+            <span className="sona-home-today-stats-detail">
+              共 <strong>{data.total}</strong> 局，
+              <span className="win">{data.wins} 胜</span>
+              {' / '}
+              <span className="loss">{data.losses} 负</span>
+            </span>
+          </div>
+
+          {data.byMode.length > 1 && (
+            <div className="sona-home-today-stats-modes">
+              {data.byMode.map((m) => (
+                <ModeRow key={m.queueId} mode={m} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function ModeRow({ mode }: { mode: ModeStats }) {
+  return (
+    <div className="sona-home-today-stats-mode">
+      <span className="sona-home-today-stats-mode-name">{mode.name}</span>
+      <span>
+        {mode.wins}/{mode.total - mode.wins}
+      </span>
+      <span className="sona-home-today-stats-mode-rate">
+        &nbsp;{Math.round(mode.winRate)}%
+      </span>
+    </div>
+  )
+}
+
+function getRateClass(rate: number): string {
+  if (rate >= 60) return 'sona-home-today-stats-rate--high'
+  if (rate >= 45) return 'sona-home-today-stats-rate--mid'
+  return 'sona-home-today-stats-rate--low'
 }

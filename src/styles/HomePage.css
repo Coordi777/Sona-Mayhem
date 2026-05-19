@@ -170,3 +170,111 @@
   max-width: 400px;
   line-height: 1.6;
 }
+
+/* ---- 今日战绩卡片 ---- */
+.sona-home-today-stats {
+  position: relative;
+  z-index: 1;
+  margin: 16px 0 18px;
+  width: 100%;
+  max-width: 460px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(20, 26, 36, 0.8), rgba(15, 22, 32, 0.85));
+  border: 1px solid rgba(200, 170, 110, 0.25);
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.sona-home-today-stats-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sona-home-today-stats-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c8aa6e;
+  letter-spacing: 1px;
+}
+
+.sona-home-today-stats-refresh {
+  font-size: 11px;
+  color: rgba(160, 155, 140, 0.6);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color .2s;
+}
+.sona-home-today-stats-refresh:hover {
+  color: #c8aa6e;
+}
+.sona-home-today-stats-refresh:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.sona-home-today-stats-summary {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.sona-home-today-stats-rate {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.sona-home-today-stats-rate--high { color: #5cd06e; text-shadow: 0 0 8px rgba(92, 208, 110, 0.3); }
+.sona-home-today-stats-rate--mid  { color: #f5d68b; }
+.sona-home-today-stats-rate--low  { color: #e57373; }
+
+.sona-home-today-stats-detail {
+  font-size: 12px;
+  color: #a09b8c;
+}
+.sona-home-today-stats-detail .win  { color: #5cd06e; }
+.sona-home-today-stats-detail .loss { color: #e57373; }
+
+.sona-home-today-stats-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(200, 170, 110, 0.12);
+}
+
+.sona-home-today-stats-mode {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #c0baa9;
+  font-variant-numeric: tabular-nums;
+}
+.sona-home-today-stats-mode-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.sona-home-today-stats-mode-rate {
+  color: #f5d68b;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: right;
+}
+
+.sona-home-today-stats-empty {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(160, 155, 140, 0.6);
+  padding: 8px 0;
+}
