@@ -157,7 +157,7 @@ export function HomePage() {
 // ==================== 今日战绩卡片 ====================
 
 function TodayStatsCard() {
-  const { data, loading, refetch } = useTodayStats()
+  const { data, loading, error, refetch } = useTodayStats()
 
   return (
     <div className="sona-home-today-stats">
@@ -173,7 +173,11 @@ function TodayStatsCard() {
         </button>
       </div>
 
-      {!data || data.total === 0 ? (
+      {error ? (
+        <div className="sona-home-today-stats-empty">
+          ⚠ 加载失败：{error.message}
+        </div>
+      ) : !data || data.total === 0 ? (
         <div className="sona-home-today-stats-empty">
           {loading ? '加载中…' : '今天还没有对局，去打一把吧 ♫'}
         </div>

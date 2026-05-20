@@ -466,8 +466,33 @@ async function pushMayhemAugmentTip(championId: number): Promise<void> {
 
 // ==================== 主逻辑 ====================
 
+/**
+ * 容忍 session.queueId 在某些时机为 0/缺失的情况：
+ * 退回到 gameflow session 的 queueId / gameMode 双重判定
+ */
+async function resolveEffectiveQueueId(session: ChampSelectSession): Promise<number> {
+  const directQueueId = session.queueId ?? 0
+  if (isAramOrKiwi(directQueueId)) return directQueueId
+
+  // session.queueId 为 0/缺失时，退到 gameflow 拿
+  try {
+    const gf = await lcu.getGameflowSession()
+    const gfQueueId = gf?.gameData?.queue?.id ?? 0
+    if (isAramOrKiwi(gfQueueId)) return gfQueueId
+
+    // 最后的兜底：用 gameMode 字符串识别（KIWI = 海斗，ARAM = 极地）
+    const gameMode = (gf?.gameData?.queue?.gameMode || gf?.map?.gameMode || '').toUpperCase()
+    if (gameMode === 'KIWI') return QUEUE_KIWI
+    if (gameMode === 'ARAM') return QUEUE_ARAM
+  } catch {
+    /* gameflow 拿不到时静默 */
+  }
+
+  return directQueueId
+}
+
 async function handleSession(session: ChampSelectSession): Promise<void> {
-  const queueId = session.queueId ?? 0
+  const queueId = await resolveEffectiveQueueId(session)
   if (!isAramOrKiwi(queueId)) return
 
   const local = getLocalLockedChampion(session)

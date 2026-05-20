@@ -29,8 +29,34 @@ import { store } from '@/lib/store'
 import { ensureMayhemMetaLoaded } from '@/lib/aramgg-meta'
 import { MayhemAugmentPanel } from '@/components/ui/MayhemAugmentPanel'
 
-// 海克斯大乱斗专属 queueId
+// 海克斯大乱斗 — 多源判定的容忍逻辑
 const QUEUE_KIWI = 3100
+
+/**
+ * 多源判定当前是否为海斗模式。
+ *
+ * 不仅看 session.queueId（某些时机是 0 或还没填好），还退回到 gameflow session 的
+ * gameData.queue.gameMode / map.gameMode 字符串判定，只要其中一处指向 KIWI 即认定。
+ * 对 LCU 的初始化时序更宽容。
+ */
+async function isMayhemMode(session: ChampSelectSession | null): Promise<boolean> {
+  // 1. 选人 session 直接给的 queueId
+  if (session?.queueId === QUEUE_KIWI) return true
+
+  // 2. 退回到 gameflow session 拿 gameMode（KIWI 是海斗专属字符串）
+  try {
+    const gf = await lcu.getGameflowSession()
+    const queueId = gf?.gameData?.queue?.id ?? 0
+    if (queueId === QUEUE_KIWI) return true
+
+    const gameMode = (gf?.gameData?.queue?.gameMode || gf?.map?.gameMode || '').toUpperCase()
+    if (gameMode === 'KIWI') return true
+  } catch {
+    /* gameflow 拿不到时静默 */
+  }
+
+  return false
+}
 
 const ROOT_ID = 'sona-mayhem-augment-panel-root'
 
@@ -94,9 +120,21 @@ function extractLocalChampionId(session: ChampSelectSession | null): number {
   return 0
 }
 
-function onSessionUpdate(session: ChampSelectSession | null) {
-  // 仅 KIWI 模式下显示
-  if (!session || session.queueId !== QUEUE_KIWI) {
+function onSessionUpdate(session: ChampSelectSession | null, _knownIsMayhem?: boolean) {
+  // session 没了 → 卸载
+  if (!session) {
+    if (mounted) unmountPanel()
+    return
+  }
+
+  // 已知是海斗（mountForChampSelect 已经检测过），后续 event 不必重检
+  if (_knownIsMayhem === false) {
+    if (mounted) unmountPanel()
+    return
+  }
+
+  // 没传入已知状态时，本地快速判定（仅看 session.queueId，避免每个 event 都跑 gameflow 查询）
+  if (_knownIsMayhem == null && session.queueId !== QUEUE_KIWI && session.queueId !== 0) {
     if (mounted) unmountPanel()
     return
   }
@@ -115,24 +153,36 @@ function onSessionUpdate(session: ChampSelectSession | null) {
 
 async function mountForChampSelect() {
   // 仅在玩家开启了开关时挂载
-  if (!store.get('mayhemAugmentPanel')) return
-
-  // 检查当前 queue 是否为 KIWI；不是则不挂
-  const session = await lcu.getChampSelectSession().catch(() => null)
-  if (!session || session.queueId !== QUEUE_KIWI) {
-    logger.debug('[Mayhem Panel] 非海斗模式，跳过挂载 (queueId=%d)', session?.queueId ?? 0)
+  if (!store.get('mayhemAugmentPanel')) {
+    logger.debug('[Mayhem Panel] 开关已关，跳过挂载')
     return
   }
 
-  logger.info('[Mayhem Panel] 进入海斗选人，开始挂载常驻面板')
+  // 多源判定当前是不是海斗
+  const session = await lcu.getChampSelectSession().catch(() => null)
+  const isMayhem = await isMayhemMode(session)
+
+  if (!isMayhem) {
+    logger.info(
+      '[Mayhem Panel] 非海斗模式，跳过挂载 (session.queueId=%d)',
+      session?.queueId ?? 0,
+    )
+    return
+  }
+
+  logger.info(
+    '[Mayhem Panel] 进入海斗选人，开始挂载常驻面板 (session.queueId=%d)',
+    session?.queueId ?? 0,
+  )
 
   // 预先触发 ARAMGG 元数据加载（与速查弹窗共享缓存）
   ensureMayhemMetaLoaded().catch(() => { /* logged in ensureMayhemMetaLoaded */ })
 
-  // 立即根据当前 session 渲染一次
-  onSessionUpdate(session)
+  // 立即根据当前 session 渲染一次（已确认是海斗，传入 true 跳过重判）
+  onSessionUpdate(session, true)
 
   // 订阅 session 变化（hover / 锁定 / 队友改英雄等）
+  // event 内部用 session.queueId 快速判定（避免每个 event 都跑 gameflow 查询）
   if (sessionUnsub) sessionUnsub()
   sessionUnsub = lcu.observe(LcuEventUri.CHAMP_SELECT, (event: LCUEventMessage) => {
     onSessionUpdate(event.data as ChampSelectSession | null)

@@ -107,10 +107,26 @@ export async function computeTodayStats(force = false): Promise<TodayStats> {
       const games = history.games?.games ?? []
 
       const todayStart = getTodayStartMs()
+      logger.info(
+        '[TodayStats] 拉取战绩成功 → 共 %d 场，过滤今日 (>= %s)',
+        games.length,
+        new Date(todayStart).toLocaleString('zh-CN'),
+      )
+
       const todayGames = games.filter((g) => {
         // gameCreation 是毫秒时间戳
         return g.gameCreation && g.gameCreation >= todayStart && g.endOfGameResult !== 'Abort_AntiCheatExit'
       })
+
+      if (todayGames.length === 0 && games.length > 0) {
+        // 调试用：把最近一场的时间打出来，方便排查时区/日期问题
+        const lastGame = games[0]
+        logger.info(
+          '[TodayStats] 今日 0 场。最近一场对局时间: %s, queueId=%d',
+          lastGame.gameCreation ? new Date(lastGame.gameCreation).toLocaleString('zh-CN') : '未知',
+          lastGame.queueId ?? 0,
+        )
+      }
 
       // 按 queueId 分桶
       const byQueue = new Map<number, { total: number; wins: number }>()
@@ -163,8 +179,8 @@ export async function computeTodayStats(force = false): Promise<TodayStats> {
       return stats
     } catch (err) {
       logger.warn('[TodayStats] 计算失败:', err)
-      // 失败不缓存空结果，下次会重试
-      return EMPTY_STATS
+      // 失败不缓存空结果，下次会重试；同时把 error 抛出让 UI 能展示
+      throw err
     } finally {
       inflightPromise = null
     }
