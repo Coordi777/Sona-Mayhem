@@ -6,6 +6,38 @@
 
 ---
 
+## [1.4.0-mayhem.4] - 2026-05-20
+
+### ✨ 新增
+
+- **HomePage 今日战绩卡片** — 主页"欢迎使用"下方新增"📊 今日战绩"卡片：
+  - 今日总胜率（大字号，颜色按 60%+/45%+/<45% 分绿/金/红）
+  - 总局数 / 胜场 / 负场
+  - 各模式分桶（仅当涉及 ≥2 种模式时显示，按局数降序排）
+  - 右上角 ↻ 刷新按钮（5 分钟 TTL 缓存）
+  - 失败时直接显示错误信息，便于诊断
+
+### 🐛 Bug 修复
+
+- **海斗常驻面板 / augment 推送 / 自动配装在某些时机失效** — `session.queueId` 在选人初期可能为 0/缺失，导致三处功能静默不触发。新增多源判定（`isMayhemMode` / `resolveEffectiveQueueId`）：
+  1. 优先用 `session.queueId`
+  2. 0/缺失时退到 `lcu.getGameflowSession()` 拿 `queue.id`
+  3. 最终 fallback 到 `gameMode === 'KIWI'` 字符串识别
+- **末日人机仍能被搜到** — 之前过滤只查 `name`（中文英雄名），但"末日人机"四字其实在 `title`（中文称号）字段。加固后**双字段双语过滤**：
+  - 中文：`name` 或 `title` 任一含"人机"即排除
+  - 英文：`alias` 含 `bot` / `doom` / `debug` / `test` 即排除
+  - `alias === 'AR'`（大乱斗占位）也排除
+  - 仍然不过滤"机器人"（避免误伤布里茨）/ 不用纯字母正则（避免误伤 JarvanIV）
+
+### 🔧 内部改造
+
+- 新增 `src/lib/today-stats.ts`：拉自己最近 100 场对局聚合今日胜率，5 分钟 TTL + inflight 并发去重
+- 新增 `src/lib/hooks.ts.useTodayStats()`
+- 失败抛出 error（不再静默吞），便于 UI 显示
+- 加详细 logger 输出当前判定路径，便于诊断（玩家在 DevTools 能看到为什么没生效）
+
+---
+
 ## [1.4.0-mayhem.3] - 2026-05-19
 
 ### ✨ 新增
