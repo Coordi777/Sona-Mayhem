@@ -406,22 +406,28 @@ export function isAssetsReady(): boolean {
  *
  * LCU 的 /lol-game-data/assets/v1/champion-summary.json 除了真英雄外，
  * 还会返回一些"特殊条目"（id > 0 但不是召唤师峡谷可选英雄）：
- *   - 末日人机 / 训练人机：alias 形如 "AnnieBot"、"BlitzcrankBot"，name 为 "末日人机"
- *   - 大乱斗 AR 占位：description 为 "AR"
- *   - 测试 / 内部条目：alias 含 "Test" / "Doom" 等
+ *   - 末日人机 / 训练人机：name 或 title 含 "人机"，alias 通常含 "Bot" / "Doom"
+ *   - 大乱斗 AR 占位：alias 是 "AR"
+ *   - 测试 / 内部条目：alias 含 "Test" / "Debug" 等
  *
- * 排除策略（保守）：
+ * 排除策略（多重启发式 + 中英文双语）：
  *   - id <= 0
- *   - 中文名（name）包含 "人机"
- *   - 英文 alias（不区分大小写）包含 'bot' 或 'doom'
+ *   - 中文名（name）或 中文称号（title）包含 "人机"（覆盖国服"末日人机"/"训练人机"等命名）
+ *   - 英文 alias（不区分大小写）包含 'bot' / 'doom' / 'debug' / 'test'
+ *   - alias 完整等于 "AR"（大乱斗占位）
  *
- * 不用 `/^[A-Za-z]+$/` 严格模式，避免误伤 JarvanIV (嘉文四世) 这类含数字的合法 alias。
+ * 不用 `/^[A-Za-z]+$/` 严格模式，避免误伤 JarvanIV (嘉文四世) 这类合法含数字的 alias。
+ * 不过滤 "机器人"，避免误伤布里茨（蒸汽机器人）。
  */
 function isPlayableChampion(c: ChampionInfo): boolean {
   if (c.id <= 0) return false
-  if (c.name?.includes('人机')) return false
+  // 中文名 or 称号 含"人机"
+  if ((c.name || '').includes('人机')) return false
+  if ((c.title || '').includes('人机')) return false
+  // 英文 alias 关键词检查
   const alias = (c.alias || '').toLowerCase()
-  if (alias.includes('bot') || alias.includes('doom')) return false
+  if (alias === 'ar') return false
+  if (alias.includes('bot') || alias.includes('doom') || alias.includes('debug') || alias.includes('test')) return false
   return true
 }
 
